@@ -1,0 +1,12 @@
+<odoo>
+
+    <record id="action_pos_daily_report_xlsx" model="ir.actions.report">
+        <field name="name">Ventas POS Día XLSX</field>
+        <field name="model">lms.pos.daily.report.wizard</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">lms_financial_reports.pos_daily_report_xlsx</field>
+        <field name="report_file">lms_financial_reports.pos_daily_report_xlsx</field>
+        <field name="print_report_name">'Ventas_POS_Dia_%s' % (object.date)</field>
+    </record>
+
+</odoo>

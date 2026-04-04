@@ -1,0 +1,36 @@
+<odoo>
+
+    <record id="view_income_statement_line_list" model="ir.ui.view">
+        <field name="name">lms.income.statement.line.list</field>
+        <field name="model">lms.income.statement.line</field>
+        <field name="arch" type="xml">
+
+            <list string="Estado de Resultados"
+                  create="false"
+                  delete="false"
+                  edit="false"
+                  decoration-bf="is_section or is_total"
+                  decoration-success="name == 'UTILIDAD NETA'">
+
+                <field name="wizard_id" column_invisible="1"/>
+                <field name="account_id" column_invisible="1"/>
+                <field name="is_account_line" column_invisible="1"/>
+
+                <field name="name"/>
+
+                <field name="amount"
+                       invisible="is_section"
+                       class="text-end fw-bold"/>
+
+                <button name="action_open_account_moves"
+                        type="object"
+                        string="Ver movimientos"
+                        class="btn-link"
+                        invisible="not is_account_line"/>
+
+            </list>
+
+        </field>
+    </record>
+
+</odoo>

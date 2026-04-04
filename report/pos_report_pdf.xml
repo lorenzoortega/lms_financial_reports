@@ -1,0 +1,82 @@
+<odoo>
+
+    <record id="action_pos_report_pdf" model="ir.actions.report">
+        <field name="name">Reporte por POS</field>
+        <field name="model">lms.pos.report.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">lms_financial_reports.pos_report_pdf_template</field>
+        <field name="report_file">lms_financial_reports.pos_report_pdf_template</field>
+    </record>
+
+    <template id="pos_report_pdf_template">
+        <t t-call="web.basic_layout">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="groups" t-value="o._get_pos_report_data()"/>
+                <t t-set="company" t-value="o.env.company"/>
+
+                <div class="page">
+                    <h2 style="text-align:center;">REPORTE POR POS</h2>
+
+                    <p style="text-align:center;">
+                        <strong><span t-esc="company.name"/></strong><br/>
+                        Rango: <span t-esc="o.date_from"/> -
+                        <span t-esc="o.date_to"/>
+                        <t t-if="o.pos_config_id">
+                            <br/>Punto de Venta: <span t-esc="o.pos_config_id.display_name"/>
+                        </t>
+                    </p>
+
+                    <t t-foreach="groups" t-as="group">
+                        <h4 style="margin-top:18px; margin-bottom:8px;">
+                            <span t-esc="group['header']"/>
+                        </h4>
+
+                        <table class="table table-sm table-bordered" style="font-size:11px;">
+                            <thead style="background-color:#f2f2f2;">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Punto de Venta</th>
+                                    <th>Sesión</th>
+                                    <th>Estado</th>
+                                    <th>Cajero</th>
+                                    <th>Orden POS</th>
+                                    <th>Factura</th>
+                                    <th>NCF</th>
+                                    <th>Cliente</th>
+                                    <th>Método</th>
+                                    <th style="text-align:right;">Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="group['lines']" t-as="line">
+                                    <tr>
+                                        <td><span t-esc="line['date']"/></td>
+                                        <td><span t-esc="line['pos_name']"/></td>
+                                        <td><span t-esc="line['session_name']"/></td>
+                                        <td><span t-esc="line['session_state']"/></td>
+                                        <td><span t-esc="line['cashier_name']"/></td>
+                                        <td><span t-esc="line['order_name']"/></td>
+                                        <td><span t-esc="line['invoice_name']"/></td>
+                                        <td><span t-esc="line['ncf_number']"/></td>
+                                        <td><span t-esc="line['customer_name']"/></td>
+                                        <td><span t-esc="line['payment_method_name']"/></td>
+                                        <td style="text-align:right;">
+                                            <span t-esc="'{:,.2f}'.format(line['amount'])"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <tr style="font-weight:bold; background-color:#f5f5f5;">
+                                    <td colspan="10">SUBTOTAL SESIÓN</td>
+                                    <td style="text-align:right;">
+                                        <span t-esc="'{:,.2f}'.format(group['total_amount'])"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>

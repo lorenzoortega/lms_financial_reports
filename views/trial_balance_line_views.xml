@@ -1,0 +1,41 @@
+<odoo>
+
+    <record id="view_trial_balance_line_list" model="ir.ui.view">
+        <field name="name">lms.trial.balance.line.list</field>
+        <field name="model">lms.trial.balance.line</field>
+        <field name="arch" type="xml">
+
+            <list string="Balanza de Comprobación"
+                  create="false"
+                  delete="false"
+                  edit="false"
+                  decoration-bf="is_group">
+
+                <field name="wizard_id" column_invisible="1"/>
+                <field name="is_group" column_invisible="1"/>
+                <field name="row_type" column_invisible="1"/>
+                <field name="class_code" column_invisible="1"/>
+                <field name="account_id" column_invisible="1"/>
+
+                <field name="display_name_line" string="Grupo / Cuenta"/>
+
+                <field name="debit_year" string="Débitos Año" sum="Total"/>
+                <field name="credit_year" string="Créditos Año" sum="Total"/>
+                <field name="balance_year" string="Balance Año" sum="Total"/>
+
+                <field name="debit_period" string="Débitos Período" sum="Total"/>
+                <field name="credit_period" string="Créditos Período" sum="Total"/>
+                <field name="balance_period" string="Balance Período" sum="Total"/>
+
+                <button name="action_open_account_moves"
+                        type="object"
+                        string="Ver movimientos"
+                        class="btn-link"
+                        invisible="is_group"/>
+
+            </list>
+
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,30 @@
+<odoo>
+
+    <record id="view_aging_receivable_summary_line_list" model="ir.ui.view">
+        <field name="name">lms.aging.receivable.summary.line.list</field>
+        <field name="model">lms.aging.receivable.summary.line</field>
+        <field name="arch" type="xml">
+            <list string="Balance por Antigüedad Resumido"
+                  create="false"
+                  delete="false"
+                  edit="false"
+                  decoration-info="is_total">
+
+                <field name="wizard_id" column_invisible="1"/>
+                <field name="sequence" column_invisible="1"/>
+                <field name="partner_id" column_invisible="1"/>
+                <field name="is_total" column_invisible="1"/>
+
+                <field name="row_label" string="Cliente"/>
+                <field name="balance_pending" string="Balance Pendiente" sum="Total"/>
+                <field name="not_due" string="No Vencida" sum="Total"/>
+                <field name="bucket_1_30" string="1-30" sum="Total"/>
+                <field name="bucket_31_60" string="31-60" sum="Total"/>
+                <field name="bucket_61_90" string="61-90" sum="Total"/>
+                <field name="bucket_90_plus" string="90+" sum="Total"/>
+
+            </list>
+        </field>
+    </record>
+
+</odoo>

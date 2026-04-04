@@ -1,0 +1,50 @@
+<odoo>
+
+    <!-- ACCIÓN WIZARD -->
+    <record id="action_trial_balance_wizard" model="ir.actions.act_window">
+        <field name="name">Balanza de Comprobación</field>
+        <field name="res_model">lms.trial.balance.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- VISTA WIZARD -->
+    <record id="view_trial_balance_wizard_form" model="ir.ui.view">
+        <field name="name">trial.balance.wizard.form</field>
+        <field name="model">lms.trial.balance.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Balanza de Comprobación">
+                <group>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                    <field name="show_zero_accounts"/>
+                </group>
+
+                <footer>
+
+                    <button name="action_view_screen"
+                            string="Ver en Pantalla"
+                            type="object"
+                            class="btn-primary"/>
+
+                    <button name="action_print_pdf"
+                            string="Generar PDF"
+                            type="object"
+                            class="btn-secondary"/>
+
+                    <button name="action_export_xlsx"
+                            string="Exportar Excel"
+                            type="object"
+                            class="btn-secondary"/>
+
+                    <button string="Cancelar"
+                            class="btn-secondary"
+                            special="cancel"/>
+
+                </footer>
+
+            </form>
+        </field>
+    </record>
+
+</odoo>

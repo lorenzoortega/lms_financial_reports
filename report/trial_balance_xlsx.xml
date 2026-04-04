@@ -1,0 +1,12 @@
+<odoo>
+
+    <record id="action_trial_balance_xlsx" model="ir.actions.report">
+        <field name="name">Balanza de Comprobación XLSX</field>
+        <field name="model">lms.trial.balance.wizard</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">lms_financial_reports.trial_balance_xlsx</field>
+        <field name="report_file">lms_financial_reports.trial_balance_xlsx</field>
+        <field name="print_report_name">'Balanza_Comprobacion_%s' % (object.date_to)</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,28 @@
+<odoo>
+
+    <record id="view_aging_payable_report_line_list" model="ir.ui.view">
+        <field name="name">aging.payable.report.line.list</field>
+        <field name="model">lms.aging.payable.report.line</field>
+        <field name="arch" type="xml">
+            <list string="Balance por Antigüedad (Proveedores)" create="false" delete="false">
+
+                <field name="sequence" column_invisible="1"/>
+                <field name="is_group" column_invisible="1"/>
+                <field name="is_subtotal" column_invisible="1"/>
+
+                <field name="vendor_name"/>
+                <field name="invoice_name" invisible="is_group"/>
+                <field name="due_date" invisible="is_group"/>
+                <field name="balance_pending"/>
+                <field name="days_overdue" invisible="is_group"/>
+                <field name="not_due"/>
+                <field name="bucket_1_30"/>
+                <field name="bucket_31_60"/>
+                <field name="bucket_61_90"/>
+                <field name="bucket_90_plus"/>
+
+            </list>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,124 @@
+<odoo>
+
+    <record id="action_income_statement_pdf" model="ir.actions.report">
+        <field name="name">Estado de Resultados</field>
+        <field name="model">lms.income.statement.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">lms_financial_reports.income_statement_pdf_template</field>
+        <field name="report_file">lms_financial_reports.income_statement_pdf_template</field>
+        <field name="print_report_name">'Estado de Resultados'</field>
+    </record>
+
+    <template id="income_statement_pdf_template">
+        <t t-call="web.external_layout">
+            <main>
+                <div class="page">
+
+                    <!-- TÍTULO -->
+                    <h2 style="text-align:center; margin-bottom:5px; letter-spacing:1px;">
+                        ESTADO DE RESULTADOS
+                    </h2>
+
+                    <p style="text-align:center; font-size:12px; margin-bottom:20px;">
+                        Desde <t t-esc="docs.date_from"/> hasta <t t-esc="docs.date_to"/>
+                    </p>
+
+                    <!-- TABLA -->
+                    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                        
+                        <!-- ENCABEZADO -->
+                        <thead>
+                            <tr>
+                                <th style="text-align:left; border-bottom:1px solid #000; padding-bottom:6px;">
+                                    Concepto
+                                </th>
+                                <th style="text-align:right; border-bottom:1px solid #000; padding-bottom:6px;">
+                                    Monto
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <t t-foreach="docs._get_income_statement_data()" t-as="line">
+
+                                <tr>
+
+                                    <!-- CONCEPTO -->
+                                    <td style="padding:6px 0;">
+
+                                        <!-- SECCIÓN -->
+                                        <t t-if="line['is_section']">
+                                            <div style="margin-top:12px; font-weight:bold;">
+                                                <t t-esc="line['name']"/>
+                                            </div>
+                                        </t>
+
+                                        <!-- LÍNEA NORMAL -->
+                                        <t t-if="not line['is_section']">
+                                            <t t-esc="line['name']"/>
+                                        </t>
+
+                                    </td>
+
+                                    <!-- MONTO -->
+                                    <td style="text-align:right; padding:6px 0;">
+
+                                        <t t-if="not line['is_section']">
+
+                                            <!-- UTILIDAD NETA -->
+                                            <t t-if="line['is_total'] and line['name'] == 'UTILIDAD NETA'">
+                                                <strong>
+                                                    <span style="
+                                                        border-top:1px solid #000;
+                                                        border-bottom:3px double #000;
+                                                        display:inline-block;
+                                                        min-width:140px;
+                                                        text-align:right;
+                                                        padding-top:4px;
+                                                        padding-bottom:4px;">
+                                                        <t t-esc="line['amount']"
+                                                           t-options="{'widget': 'monetary', 'display_currency': env.company.currency_id}"/>
+                                                    </span>
+                                                </strong>
+                                            </t>
+
+                                            <!-- OTROS TOTALES -->
+                                            <t t-if="line['is_total'] and line['name'] != 'UTILIDAD NETA'">
+                                                <strong>
+                                                    <span style="
+                                                        border-top:1px solid #000;
+                                                        display:inline-block;
+                                                        min-width:140px;
+                                                        text-align:right;
+                                                        padding-top:4px;">
+                                                        <t t-esc="line['amount']"
+                                                           t-options="{'widget': 'monetary', 'display_currency': env.company.currency_id}"/>
+                                                    </span>
+                                                </strong>
+                                            </t>
+
+                                            <!-- LÍNEAS NORMALES -->
+                                            <t t-if="not line['is_total']">
+                                                <t t-esc="line['amount']"
+                                                   t-options="{'widget': 'monetary', 'display_currency': env.company.currency_id}"/>
+                                            </t>
+
+                                        </t>
+
+                                    </td>
+
+                                </tr>
+
+                            </t>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            </main>
+        </t>
+    </template>
+
+</odoo>

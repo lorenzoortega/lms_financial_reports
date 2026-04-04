@@ -1,0 +1,71 @@
+<odoo>
+
+    <menuitem id="menu_lms_reports_root"
+              name="LMS Reportes"
+              parent="account.menu_finance"
+              sequence="90"/>
+
+    <menuitem id="menu_lms_reports_financial"
+              name="Financieros"
+              parent="menu_lms_reports_root"
+              sequence="10"/>
+
+    <menuitem id="menu_trial_balance"
+              name="Balanza de Comprobación"
+              parent="menu_lms_reports_financial"
+              action="action_trial_balance_wizard"
+              sequence="10"/>
+
+    <menuitem id="menu_income_statement"
+              name="Estado de Resultados"
+              parent="menu_lms_reports_financial"
+              action="action_income_statement_wizard"
+              sequence="20"/>
+
+    <menuitem id="menu_lms_reports_accounting"
+              name="Contabilidad"
+              parent="menu_lms_reports_root"
+              sequence="15"/>
+
+    <menuitem id="menu_balance_antiguedad"
+              name="Balance por Antigüedad (Clientes)"
+              parent="menu_lms_reports_accounting"
+              action="action_aging_receivable_report_wizard"
+              sequence="10"/>
+
+    <menuitem id="menu_balance_antiguedad_resumido"
+              name="Balance por Antigüedad Resumido (Clientes)"
+              parent="menu_lms_reports_accounting"
+              action="action_aging_receivable_summary_wizard"
+              sequence="20"/>
+
+    <menuitem id="menu_balance_antiguedad_proveedores"
+              name="Balance por Antigüedad (Proveedores)"
+              parent="menu_lms_reports_accounting"
+              action="action_aging_payable_report_wizard"
+              sequence="30"/>
+
+    <menuitem id="menu_balance_antiguedad_resumido_proveedores"
+              name="Balance por Antigüedad Resumido (Proveedores)"
+              parent="menu_lms_reports_accounting"
+              action="action_aging_payable_summary_wizard"
+              sequence="40"/>
+
+    <menuitem id="menu_lms_reports_pos_root"
+              name="POS"
+              parent="menu_lms_reports_root"
+              sequence="20"/>
+
+    <menuitem id="menu_action_pos_report_wizard"
+              name="Reporte por POS"
+              parent="menu_lms_reports_pos_root"
+              action="action_pos_report_wizard"
+              sequence="10"/>
+
+    <menuitem id="menu_action_pos_daily_report_wizard"
+              name="Ventas POS Día"
+              parent="menu_lms_reports_pos_root"
+              action="action_pos_daily_report_wizard"
+              sequence="20"/>
+
+</odoo>

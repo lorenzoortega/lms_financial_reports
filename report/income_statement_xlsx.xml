@@ -1,0 +1,11 @@
+<odoo>
+
+    <record id="action_income_statement_xlsx" model="ir.actions.report">
+        <field name="name">Estado de Resultados XLSX</field>
+        <field name="model">lms.income.statement.wizard</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">lms_financial_reports.income_statement_xlsx</field>
+        <field name="report_file">lms_financial_reports.income_statement_xlsx</field>
+    </record>
+
+</odoo>

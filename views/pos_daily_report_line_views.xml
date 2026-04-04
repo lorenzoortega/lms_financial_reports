@@ -1,0 +1,43 @@
+<odoo>
+
+    <record id="view_pos_daily_report_line_list" model="ir.ui.view">
+        <field name="name">lms.pos.daily.report.line.list</field>
+        <field name="model">lms.pos.daily.report.line</field>
+        <field name="arch" type="xml">
+            <list string="Reporte Ventas POS Día"
+                  create="false"
+                  delete="false"
+                  edit="false"
+                  decoration-bf="is_group or is_subtotal"
+                  decoration-danger="not is_group and not is_subtotal and cash_diff &lt; 0"
+                  decoration-success="not is_group and not is_subtotal and cash_diff == 0"
+                  decoration-warning="not is_group and not is_subtotal and cash_diff &gt; 0">
+
+                <field name="wizard_id" column_invisible="1"/>
+                <field name="session_id" column_invisible="1"/>
+                <field name="pos_config_id" column_invisible="1"/>
+                <field name="cashier_id" column_invisible="1"/>
+                <field name="is_group" column_invisible="1"/>
+                <field name="is_subtotal" column_invisible="1"/>
+                <field name="row_type" column_invisible="1"/>
+
+                <field name="date_label" string="Fecha / POS"/>
+                <field name="session_range" string="Rango Sesión"/>
+                <field name="session_name" string="Sesión"/>
+                <field name="session_state" string="Estado"/>
+                <field name="cashier_name" string="Cajero"/>
+
+                <field name="order_count_display" string="Cant. Órdenes"/>
+                <field name="cash_amount_display" string="Efectivo"/>
+                <field name="cash_real_display" string="Contado"/>
+                <field name="cash_diff_display" string="Diferencia"/>
+                <field name="card_amount_display" string="Tarjeta"/>
+                <field name="transfer_amount_display" string="Transferencia"/>
+                <field name="tax_amount_display" string="ITBIS"/>
+                <field name="total_amount_display" string="Total"/>
+
+            </list>
+        </field>
+    </record>
+
+</odoo>

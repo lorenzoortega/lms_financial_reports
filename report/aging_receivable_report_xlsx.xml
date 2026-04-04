@@ -1,0 +1,11 @@
+<odoo>
+    <record id="action_aging_receivable_report_xlsx" model="ir.actions.report">
+        <field name="name">Balance por Antigüedad XLSX</field>
+        <field name="model">lms.aging.receivable.report.wizard</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">lms_financial_reports.aging_receivable_report_xlsx</field>
+        <field name="report_file">lms_financial_reports.aging_receivable_report_xlsx</field>
+        <field name="binding_model_id" ref="model_lms_aging_receivable_report_wizard"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

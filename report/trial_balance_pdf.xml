@@ -1,0 +1,161 @@
+<odoo>
+
+    <record id="action_trial_balance_pdf" model="ir.actions.report">
+        <field name="name">Balanza de Comprobación</field>
+        <field name="model">lms.trial.balance.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">lms_financial_reports.trial_balance_pdf_template</field>
+        <field name="report_file">lms_financial_reports.trial_balance_pdf_template</field>
+    </record>
+
+    <template id="trial_balance_pdf_template">
+        <t t-call="web.basic_layout">
+
+            <t t-foreach="docs" t-as="o">
+
+                <t t-set="groups" t-value="o._get_trial_balance_data()"/>
+                <t t-set="company" t-value="o.env.company"/>
+
+                <div class="page">
+
+                    <h2 style="text-align:center;">BALANZA DE COMPROBACIÓN</h2>
+
+                    <p style="text-align:center;">
+                        <strong><span t-esc="company.name"/></strong><br/>
+                        Rango: <span t-esc="o.date_from"/> -
+                        <span t-esc="o.date_to"/>
+                    </p>
+
+                    <br/>
+
+                    <table class="table table-sm table-bordered" style="font-size:11px;">
+
+                        <thead style="background-color:#f2f2f2;">
+                            <tr>
+                                <th>Cuenta</th>
+                                <th>Descripción</th>
+                                <th style="text-align:right;">Acum. Año Débitos</th>
+                                <th style="text-align:right;">Acum. Año Créditos</th>
+                                <th style="text-align:right;">Acum. Año Balance</th>
+                                <th style="text-align:right;">Período Débitos</th>
+                                <th style="text-align:right;">Período Créditos</th>
+                                <th style="text-align:right;">Balance Período</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <t t-set="total_general_debit_year" t-value="0"/>
+                            <t t-set="total_general_credit_year" t-value="0"/>
+                            <t t-set="total_general_debit_period" t-value="0"/>
+                            <t t-set="total_general_credit_period" t-value="0"/>
+
+                            <t t-foreach="groups" t-as="group">
+
+                                <!-- Clase -->
+                                <tr style="font-weight:bold; background-color:#eaeaea;">
+                                    <td colspan="8">
+                                        CLASE <span t-esc="group['class_code']"/> -
+                                        <span t-esc="group['class_name']"/>
+                                    </td>
+                                </tr>
+
+                                <t t-foreach="group['accounts']" t-as="l">
+                                    <tr>
+                                        <td><span t-esc="l['account'].code"/></td>
+                                        <td><span t-esc="l['account'].name"/></td>
+
+                                        <td style="text-align:right;">
+                                            <span t-esc="'{:,.2f}'.format(l['debit_year'])"/>
+                                        </td>
+                                        <td style="text-align:right;">
+                                            <span t-esc="'{:,.2f}'.format(l['credit_year'])"/>
+                                        </td>
+                                        <td style="text-align:right;">
+                                            <span t-esc="'{:,.2f}'.format(l['balance_year'])"/>
+                                        </td>
+                                        <td style="text-align:right;">
+                                            <span t-esc="'{:,.2f}'.format(l['debit_period'])"/>
+                                        </td>
+                                        <td style="text-align:right;">
+                                            <span t-esc="'{:,.2f}'.format(l['credit_period'])"/>
+                                        </td>
+                                        <td style="text-align:right;">
+                                            <span t-esc="'{:,.2f}'.format(l['balance_period'])"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Subtotal -->
+                                <tr style="font-weight:bold; background-color:#f5f5f5;">
+                                    <td colspan="2">
+                                        SUBTOTAL <span t-esc="group['class_name']"/>
+                                    </td>
+
+                                    <td style="text-align:right;">
+                                        <span t-esc="'{:,.2f}'.format(group['totals']['debit_year'])"/>
+                                    </td>
+                                    <td style="text-align:right;">
+                                        <span t-esc="'{:,.2f}'.format(group['totals']['credit_year'])"/>
+                                    </td>
+                                    <td style="text-align:right;">
+                                        <span t-esc="'{:,.2f}'.format(group['totals']['debit_year'] - group['totals']['credit_year'])"/>
+                                    </td>
+                                    <td style="text-align:right;">
+                                        <span t-esc="'{:,.2f}'.format(group['totals']['debit_period'])"/>
+                                    </td>
+                                    <td style="text-align:right;">
+                                        <span t-esc="'{:,.2f}'.format(group['totals']['credit_period'])"/>
+                                    </td>
+                                    <td style="text-align:right;">
+                                        <span t-esc="'{:,.2f}'.format(group['totals']['debit_period'] - group['totals']['credit_period'])"/>
+                                    </td>
+                                </tr>
+
+                                <t t-set="total_general_debit_year"
+                                   t-value="total_general_debit_year + group['totals']['debit_year']"/>
+                                <t t-set="total_general_credit_year"
+                                   t-value="total_general_credit_year + group['totals']['credit_year']"/>
+                                <t t-set="total_general_debit_period"
+                                   t-value="total_general_debit_period + group['totals']['debit_period']"/>
+                                <t t-set="total_general_credit_period"
+                                   t-value="total_general_credit_period + group['totals']['credit_period']"/>
+
+                            </t>
+
+                            <!-- Totales Generales -->
+                            <tr style="font-weight:bold; background-color:#d9d9d9;">
+                                <td colspan="2">TOTALES GENERALES</td>
+
+                                <td style="text-align:right;">
+                                    <span t-esc="'{:,.2f}'.format(total_general_debit_year)"/>
+                                </td>
+                                <td style="text-align:right;">
+                                    <span t-esc="'{:,.2f}'.format(total_general_credit_year)"/>
+                                </td>
+                                <td style="text-align:right;">
+                                    <span t-esc="'{:,.2f}'.format(total_general_debit_year - total_general_credit_year)"/>
+                                </td>
+                                <td style="text-align:right;">
+                                    <span t-esc="'{:,.2f}'.format(total_general_debit_period)"/>
+                                </td>
+                                <td style="text-align:right;">
+                                    <span t-esc="'{:,.2f}'.format(total_general_credit_period)"/>
+                                </td>
+                                <td style="text-align:right;">
+                                    <span t-esc="'{:,.2f}'.format(total_general_debit_period - total_general_credit_period)"/>
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </t>
+
+        </t>
+    </template>
+
+</odoo>

@@ -1,0 +1,44 @@
+<odoo>
+
+    <record id="view_pos_report_line_list" model="ir.ui.view">
+        <field name="name">lms.pos.report.line.list</field>
+        <field name="model">lms.pos.report.line</field>
+        <field name="arch" type="xml">
+            <list string="Reporte por POS"
+                  create="false"
+                  delete="false"
+                  edit="false"
+                  decoration-bf="is_group"
+                  decoration-info="is_subtotal">
+
+                <field name="wizard_id" column_invisible="1"/>
+                <field name="is_group" column_invisible="1"/>
+                <field name="is_subtotal" column_invisible="1"/>
+                <field name="row_type" column_invisible="1"/>
+                <field name="session_id" column_invisible="1"/>
+                <field name="order_id" column_invisible="1"/>
+                <field name="invoice_id" column_invisible="1"/>
+
+                <field name="date_label" string="Fecha / Sesión"/>
+                <field name="pos_name" string="Punto de Venta"/>
+                <field name="session_name" string="Sesión"/>
+                <field name="session_state" string="Estado"/>
+                <field name="cashier_name" string="Cajero"/>
+                <field name="order_name" string="Orden POS"/>
+                <field name="invoice_name" string="Factura"/>
+                <field name="ncf_number" string="NCF"/>
+                <field name="customer_name" string="Cliente"/>
+                <field name="payment_method_name" string="Método de Pago"/>
+                <field name="amount" string="Monto" sum="Total"/>
+
+                <button name="action_open_invoice"
+                        type="object"
+                        string="Ver factura"
+                        class="btn-link"
+                        invisible="is_group or is_subtotal"/>
+
+            </list>
+        </field>
+    </record>
+
+</odoo>

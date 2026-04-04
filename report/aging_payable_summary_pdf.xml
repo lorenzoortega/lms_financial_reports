@@ -1,0 +1,69 @@
+<odoo>
+
+    <template id="aging_payable_summary_pdf_document">
+        <t t-call="web.basic_layout">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="data" t-value="o._get_report_data()"/>
+                <t t-set="company" t-value="o.env.company"/>
+
+                <div class="page">
+                    <h2 style="text-align:center;">BALANCE POR ANTIGÜEDAD RESUMIDO (PROVEEDORES)</h2>
+
+                    <p style="text-align:center;">
+                        <strong><span t-esc="company.name"/></strong><br/>
+                        Rango: <span t-esc="data['date_from']"/> -
+                        <span t-esc="data['date_to']"/>
+                    </p>
+
+                    <table class="table table-sm table-bordered" style="width:100%; font-size:11px;">
+                        <thead style="background-color:#f2f2f2;">
+                            <tr>
+                                <th>Proveedor</th>
+                                <th style="text-align:right;">Balance</th>
+                                <th style="text-align:right;">No Vencida</th>
+                                <th style="text-align:right;">1-30</th>
+                                <th style="text-align:right;">31-60</th>
+                                <th style="text-align:right;">61-90</th>
+                                <th style="text-align:right;">90+</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="data['lines']" t-as="line">
+                                <tr>
+                                    <td><span t-esc="line['vendor_name']"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['balance_pending'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['not_due'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['bucket_1_30'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['bucket_31_60'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['bucket_61_90'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['bucket_90_plus'])"/></td>
+                                </tr>
+                            </t>
+
+                            <tr style="font-weight:bold; background:#F5F5F5;">
+                                <td>TOTAL GENERAL</td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['balance_pending'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['not_due'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['bucket_1_30'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['bucket_31_60'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['bucket_61_90'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['bucket_90_plus'])"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_aging_payable_summary_pdf" model="ir.actions.report">
+        <field name="name">Balance por Antigüedad Resumido Proveedores PDF</field>
+        <field name="model">lms.aging.payable.summary.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">lms_financial_reports.aging_payable_summary_pdf_document</field>
+        <field name="report_file">lms_financial_reports.aging_payable_summary_pdf_document</field>
+        <field name="binding_model_id" ref="model_lms_aging_payable_summary_wizard"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

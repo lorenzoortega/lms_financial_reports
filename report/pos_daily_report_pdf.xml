@@ -1,0 +1,103 @@
+<odoo>
+
+    <record id="action_pos_daily_report_pdf" model="ir.actions.report">
+        <field name="name">Ventas POS Día</field>
+        <field name="model">lms.pos.daily.report.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">lms_financial_reports.pos_daily_report_pdf_template</field>
+        <field name="report_file">lms_financial_reports.pos_daily_report_pdf_template</field>
+    </record>
+
+    <template id="pos_daily_report_pdf_template">
+        <t t-call="web.basic_layout">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="data" t-value="o._get_report_data()"/>
+                <t t-set="company" t-value="o.env.company"/>
+
+                <div class="page">
+                    <h2 style="text-align:center;">REPORTE VENTAS POS DÍA</h2>
+
+                    <p style="text-align:center;">
+                        <strong><span t-esc="company.name"/></strong><br/>
+                        Fecha: <span t-esc="o.date"/>
+                        <t t-if="o.pos_config_id">
+                            <br/>Punto de Venta: <span t-esc="o.pos_config_id.display_name"/>
+                        </t>
+                    </p>
+
+                    <br/>
+
+                    <table class="table table-sm table-bordered" style="font-size:11px;">
+                        <thead style="background-color:#f2f2f2;">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Rango Sesión</th>
+                                <th>Sesión</th>
+                                <th>Estado</th>
+                                <th>Cajero</th>
+                                <th style="text-align:right;">Cant. Órdenes</th>
+                                <th style="text-align:right;">Efectivo</th>
+                                <th style="text-align:right;">Contado</th>
+                                <th style="text-align:right;">Diferencia</th>
+                                <th style="text-align:right;">Tarjeta</th>
+                                <th style="text-align:right;">Transferencia</th>
+                                <th style="text-align:right;">ITBIS</th>
+                                <th style="text-align:right;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="data['pos_groups']" t-as="group">
+                                <tr style="font-weight:bold; background-color:#eaeaea;">
+                                    <td colspan="13">
+                                        <span t-esc="group['pos_name']"/>
+                                    </td>
+                                </tr>
+
+                                <t t-foreach="group['sessions']" t-as="line">
+                                    <tr>
+                                        <td><span t-esc="line['date']"/></td>
+                                        <td><span t-esc="line['session_range']"/></td>
+                                        <td><span t-esc="line['session_name']"/></td>
+                                        <td><span t-esc="line['session_state']"/></td>
+                                        <td><span t-esc="line['cashier_name']"/></td>
+                                        <td style="text-align:right;"><span t-esc="line['order_count']"/></td>
+                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['cash_amount'])"/></td>
+                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['cash_real'])"/></td>
+                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['cash_diff'])"/></td>
+                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['card_amount'])"/></td>
+                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['transfer_amount'])"/></td>
+                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['tax_amount'])"/></td>
+                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['total_amount'])"/></td>
+                                    </tr>
+                                </t>
+
+                                <tr style="font-weight:bold; background-color:#f5f5f5;">
+                                    <td colspan="6">SUBTOTAL <span t-esc="group['pos_name']"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(group['subtotal']['cash_amount'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(group['subtotal']['cash_real'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(group['subtotal']['cash_diff'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(group['subtotal']['card_amount'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(group['subtotal']['transfer_amount'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(group['subtotal']['tax_amount'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(group['subtotal']['total_amount'])"/></td>
+                                </tr>
+                            </t>
+
+                            <tr style="font-weight:bold; background-color:#d9d9d9;">
+                                <td colspan="6">TOTAL VENTAS POS DÍA</td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['cash_amount'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['cash_real'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['cash_diff'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['card_amount'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['transfer_amount'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['tax_amount'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['total_amount'])"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>

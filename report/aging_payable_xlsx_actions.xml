@@ -1,0 +1,21 @@
+<odoo>
+
+    <record id="action_aging_payable_report_xlsx" model="ir.actions.report">
+        <field name="name">Balance por Antigüedad Proveedores XLSX</field>
+        <field name="model">lms.aging.payable.report.wizard</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">lms_financial_reports.aging_payable_report_xlsx</field>
+        <field name="report_file">lms_financial_reports.aging_payable_report_xlsx</field>
+        <field name="print_report_name">'Balance_Antiguedad_Proveedores_%s' % (object.date_to)</field>
+    </record>
+
+    <record id="action_aging_payable_summary_xlsx" model="ir.actions.report">
+        <field name="name">Balance por Antigüedad Resumido Proveedores XLSX</field>
+        <field name="model">lms.aging.payable.summary.wizard</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">lms_financial_reports.aging_payable_summary_xlsx</field>
+        <field name="report_file">lms_financial_reports.aging_payable_summary_xlsx</field>
+        <field name="print_report_name">'Balance_Antiguedad_Resumido_Proveedores_%s' % (object.date_to)</field>
+    </record>
+
+</odoo>
