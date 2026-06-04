@@ -54,7 +54,8 @@ class PosDailyReportXlsx(models.AbstractModel):
 
         headers = [
             "Fecha", "RANGO SESIÓN", "Sesión", "Estado", "Cajero", "Cant. Órdenes",
-            "Efectivo", "Contado", "Diferencia", "Tarjeta", "Transferencia", "ITBIS", "Total"
+            "Efectivo", "Liquidación Chofer", "Total Efectivo Cobrado",
+            "Tarjeta", "Transferencia", "ITBIS", "Total Ventas"
         ]
         for col, header in enumerate(headers):
             sheet.write(row, col, header, header_format)
@@ -72,8 +73,8 @@ class PosDailyReportXlsx(models.AbstractModel):
                 sheet.write(row, 4, line['cashier_name'])
                 sheet.write(row, 5, line['order_count'])
                 sheet.write(row, 6, line['cash_amount'], number_format)
-                sheet.write(row, 7, line['cash_real'], number_format)
-                sheet.write(row, 8, line['cash_diff'], number_format)
+                sheet.write(row, 7, line['cash_diff'], number_format)
+                sheet.write(row, 8, line['cash_real'], number_format)
                 sheet.write(row, 9, line['card_amount'], number_format)
                 sheet.write(row, 10, line['transfer_amount'], number_format)
                 sheet.write(row, 11, line['tax_amount'], number_format)
@@ -82,8 +83,8 @@ class PosDailyReportXlsx(models.AbstractModel):
 
             sheet.write(row, 0, f"SUBTOTAL {group['pos_name']}", subtotal_format)
             sheet.write(row, 6, group['subtotal']['cash_amount'], bold_number_format)
-            sheet.write(row, 7, group['subtotal']['cash_real'], bold_number_format)
-            sheet.write(row, 8, group['subtotal']['cash_diff'], bold_number_format)
+            sheet.write(row, 7, group['subtotal']['cash_diff'], bold_number_format)
+            sheet.write(row, 8, group['subtotal']['cash_real'], bold_number_format)
             sheet.write(row, 9, group['subtotal']['card_amount'], bold_number_format)
             sheet.write(row, 10, group['subtotal']['transfer_amount'], bold_number_format)
             sheet.write(row, 11, group['subtotal']['tax_amount'], bold_number_format)
@@ -92,8 +93,8 @@ class PosDailyReportXlsx(models.AbstractModel):
 
         sheet.write(row, 0, "TOTAL VENTAS POS DIA", bold_format)
         sheet.write(row, 6, report_data['totals']['cash_amount'], bold_number_format)
-        sheet.write(row, 7, report_data['totals']['cash_real'], bold_number_format)
-        sheet.write(row, 8, report_data['totals']['cash_diff'], bold_number_format)
+        sheet.write(row, 7, report_data['totals']['cash_diff'], bold_number_format)
+        sheet.write(row, 8, report_data['totals']['cash_real'], bold_number_format)
         sheet.write(row, 9, report_data['totals']['card_amount'], bold_number_format)
         sheet.write(row, 10, report_data['totals']['transfer_amount'], bold_number_format)
         sheet.write(row, 11, report_data['totals']['tax_amount'], bold_number_format)
@@ -103,4 +104,5 @@ class PosDailyReportXlsx(models.AbstractModel):
         sheet.set_column(1, 1, 38)
         sheet.set_column(2, 4, 14)
         sheet.set_column(5, 5, 14)
-        sheet.set_column(6, 12, 14)
+        sheet.set_column(6, 8, 22)
+        sheet.set_column(9, 12, 14)

@@ -57,6 +57,9 @@
 	'report/aging_receivable_report_xlsx.xml',
 	'report/aging_receivable_summary_xlsx.xml',
 
+
+	'views/aging_wizard_actions.xml',  # 👈 ESTE NUEVO
+
         # =========================
         # CONTABILIDAD - CUENTA POR PAGAR
         # =========================

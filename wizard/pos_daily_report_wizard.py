@@ -57,8 +57,15 @@ class PosDailyReportWizard(models.TransientModel):
         payments = orders.mapped('payment_ids')
 
         for payment in payments:
-            method_name = (payment.payment_method_id.name or '').strip().lower()
+            method = payment.payment_method_id
+            method_name = (method.name or '').strip().lower()
             amount = payment.amount or 0.0
+
+            # Los pagos COD / Contra Entrega no se cuentan aquí.
+            # Se reportan como Liquidación Chofer cuando el chofer entrega
+            # el dinero en una sesión POS.
+            if getattr(method, 'is_cod_delivery', False):
+                continue
 
             if 'efectivo' in method_name or 'cash' in method_name:
                 cash_amount += amount
@@ -80,6 +87,31 @@ class PosDailyReportWizard(models.TransientModel):
                 amount_tax += order.amount_tax or 0.0
         return amount_tax
 
+    def _get_driver_liquidation_amounts_by_session(self, sessions):
+        result = {session.id: 0.0 for session in sessions}
+
+        if not sessions:
+            return result
+
+        if 'lms.phone.order' not in self.env.registry.models:
+            return result
+
+        PhoneOrder = self.env['lms.phone.order']
+
+        domain = [
+            ('delivery_liquidation_pos_session_id', 'in', sessions.ids),
+            ('delivery_cash_state', 'in', ['settled', 'difference']),
+        ]
+
+        phone_orders = PhoneOrder.search(domain)
+
+        for order in phone_orders:
+            session = order.delivery_liquidation_pos_session_id
+            if session:
+                result[session.id] = result.get(session.id, 0.0) + (order.driver_cash_received or 0.0)
+
+        return result
+
     def _get_report_data(self):
         self.ensure_one()
 
@@ -95,6 +127,7 @@ class PosDailyReportWizard(models.TransientModel):
             domain.append(('config_id', '=', self.pos_config_id.id))
 
         sessions = Session.search(domain, order='config_id asc, start_at asc, name asc')
+        driver_liquidation_by_session = self._get_driver_liquidation_amounts_by_session(sessions)
 
         pos_groups = OrderedDict()
 
@@ -110,7 +143,9 @@ class PosDailyReportWizard(models.TransientModel):
 
         for session in sessions:
             session_orders = session.order_ids.filtered(lambda o: o.state in ['paid', 'done', 'invoiced'])
-            if not session_orders:
+            driver_liquidation_amount = driver_liquidation_by_session.get(session.id, 0.0)
+
+            if not session_orders and not driver_liquidation_amount:
                 continue
 
             pos = session.config_id
@@ -136,10 +171,14 @@ class PosDailyReportWizard(models.TransientModel):
             order_count = len(session_orders)
             cash_amount, card_amount, transfer_amount = self._classify_payments(session_orders)
             tax_amount = self._get_session_tax_amount(session_orders)
-            total_amount = cash_amount + card_amount + transfer_amount
 
-            cash_real = session.cash_register_balance_end_real or 0.0
-            cash_diff = cash_real - cash_amount
+            # Reutilizamos campos técnicos existentes para no romper vistas/Excel:
+            # cash_diff = Liquidación Chofer
+            # cash_real = Total Efectivo Cobrado
+            cash_diff = driver_liquidation_amount
+            cash_real = cash_amount + driver_liquidation_amount
+
+            total_amount = cash_amount + driver_liquidation_amount + card_amount + transfer_amount
 
             local_start = fields.Datetime.context_timestamp(self, session.start_at) if session.start_at else False
 
@@ -246,12 +285,6 @@ class PosDailyReportWizard(models.TransientModel):
             'domain': [('wizard_id', '=', self.id)],
             'target': 'current',
         }
-
-    def action_print_pdf(self):
-        self.ensure_one()
-        return self.env.ref(
-            'lms_financial_reports.action_pos_daily_report_pdf'
-        ).report_action(self)
 
     def action_export_xlsx(self):
         self.ensure_one()

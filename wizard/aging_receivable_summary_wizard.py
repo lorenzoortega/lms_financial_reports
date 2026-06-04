@@ -1,27 +1,16 @@
 from collections import OrderedDict
 from datetime import datetime, time
 
-from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
+from odoo import models, fields, _
 
 
 class AgingReceivableSummaryWizard(models.TransientModel):
     _name = 'lms.aging.receivable.summary.wizard'
     _description = 'Balance por Antigüedad Resumido'
 
-    date_from = fields.Date(string="Fecha Inicio", required=True)
-    date_to = fields.Date(string="Fecha Fin", required=True)
-
-    @api.constrains('date_from', 'date_to')
-    def _check_dates(self):
-        for rec in self:
-            if not rec.date_from or not rec.date_to:
-                raise ValidationError(_("Debe seleccionar fecha inicio y fecha fin."))
-            if rec.date_from > rec.date_to:
-                raise ValidationError(_("La fecha inicio no puede ser mayor que la fecha fin."))
+    date_to = fields.Date(string="Fecha de corte", required=True)
 
     def _get_days_overdue(self, move):
-        self.ensure_one()
         cutoff_date = self.date_to
         due_date = move.invoice_date_due or move.invoice_date
 
@@ -41,7 +30,6 @@ class AgingReceivableSummaryWizard(models.TransientModel):
         }
 
     def _get_moves_domain(self):
-        self.ensure_one()
         date_to_end = datetime.combine(self.date_to, time.max)
 
         return [
@@ -49,14 +37,11 @@ class AgingReceivableSummaryWizard(models.TransientModel):
             ('state', '=', 'posted'),
             ('amount_residual', '>', 0),
             ('invoice_date', '!=', False),
-            ('invoice_date', '>=', self.date_from),
             ('invoice_date', '<=', self.date_to),
             ('date', '<=', fields.Datetime.to_string(date_to_end)),
         ]
 
     def _get_report_data(self):
-        self.ensure_one()
-
         Move = self.env['account.move']
         moves = Move.search(
             self._get_moves_domain(),
@@ -110,19 +95,16 @@ class AgingReceivableSummaryWizard(models.TransientModel):
         return {
             'lines': list(customer_totals.values()),
             'totals': grand_total,
-            'date_from': self.date_from,
             'date_to': self.date_to,
         }
 
     def action_view_screen(self):
-        self.ensure_one()
-
         Line = self.env['lms.aging.receivable.summary.line']
         Line.search([('wizard_id', '=', self.id)]).unlink()
 
         data = self._get_report_data()
-
         sequence = 1
+
         for line in data['lines']:
             vals = dict(line)
             vals.update({
@@ -160,13 +142,11 @@ class AgingReceivableSummaryWizard(models.TransientModel):
         }
 
     def action_print_pdf(self):
-        self.ensure_one()
         return self.env.ref(
             'lms_financial_reports.action_aging_receivable_summary_pdf'
         ).report_action(self)
 
     def action_export_xlsx(self):
-        self.ensure_one()
         return self.env.ref(
             'lms_financial_reports.action_aging_receivable_summary_xlsx'
         ).report_action(self)

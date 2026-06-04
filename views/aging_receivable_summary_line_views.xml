@@ -23,6 +23,29 @@
                 <field name="bucket_61_90" string="61-90" sum="Total"/>
                 <field name="bucket_90_plus" string="90+" sum="Total"/>
 
+                <button name="action_view_invoices"
+                        type="object"
+                        string="Ver facturas"
+                        invisible="is_total"/>
+
+            </list>
+        </field>
+    </record>
+
+    <record id="view_account_move_receivable_drilldown_list" model="ir.ui.view">
+        <field name="name">account.move.receivable.drilldown.list</field>
+        <field name="model">account.move</field>
+        <field name="arch" type="xml">
+            <list string="Facturas Cliente" create="false" delete="false" edit="false">
+                <field name="currency_id" column_invisible="1"/>
+                <field name="name" string="Número"/>
+                <field name="partner_id" string="Cliente"/>
+                <field name="ref" string="NCF / Referencia"/>
+                <field name="invoice_date_due" string="Fecha de vencimiento"/>
+                <field name="amount_untaxed" string="Impuestos no inc." sum="Total"/>
+                <field name="amount_total" string="Total factura" sum="Total"/>
+                <field name="amount_residual" string="Cantidad por pagar" sum="Total"/>
+                <field name="payment_state" string="Estado"/>
             </list>
         </field>
     </record>

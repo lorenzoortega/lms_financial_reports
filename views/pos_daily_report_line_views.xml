@@ -29,8 +29,8 @@
 
                 <field name="order_count_display" string="Cant. Órdenes"/>
                 <field name="cash_amount_display" string="Efectivo"/>
-                <field name="cash_real_display" string="Contado"/>
-                <field name="cash_diff_display" string="Diferencia"/>
+                <field name="cash_diff_display" string="Liquidación Chofer"/>
+                <field name="cash_real_display" string="Total Efectivo Cobrado"/>
                 <field name="card_amount_display" string="Tarjeta"/>
                 <field name="transfer_amount_display" string="Transferencia"/>
                 <field name="tax_amount_display" string="ITBIS"/>

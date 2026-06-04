@@ -28,3 +28,32 @@ class AgingReceivableSummaryLine(models.TransientModel):
     def _compute_row_label(self):
         for rec in self:
             rec.row_label = rec.total_label if rec.is_total else (rec.customer_name or '')
+
+    def action_view_invoices(self):
+        self.ensure_one()
+
+        if self.is_total or not self.partner_id or not self.wizard_id:
+            return False
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Facturas Cliente',
+            'res_model': 'account.move',
+            'view_mode': 'list,form',
+            'views': [
+                (self.env.ref('lms_financial_reports.view_account_move_receivable_drilldown_list').id, 'list'),
+                (False, 'form'),
+            ],
+            'domain': [
+                ('move_type', '=', 'out_invoice'),
+                ('state', '=', 'posted'),
+                ('amount_residual', '>', 0),
+                ('partner_id', '=', self.partner_id.id),
+                ('invoice_date', '!=', False),
+                ('invoice_date', '<=', self.wizard_id.date_to),
+            ],
+            'context': {
+                'create': False,
+            },
+            'target': 'current',
+        }

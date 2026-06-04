@@ -1,0 +1,43 @@
+<odoo>
+
+    <!-- ========================= -->
+    <!-- CxC Detalle -->
+    <!-- ========================= -->
+    <record id="action_aging_receivable_report_wizard" model="ir.actions.act_window">
+        <field name="name">Balance por Antigüedad (Clientes)</field>
+        <field name="res_model">lms.aging.receivable.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ========================= -->
+    <!-- CxC Resumido -->
+    <!-- ========================= -->
+    <record id="action_aging_receivable_summary_wizard" model="ir.actions.act_window">
+        <field name="name">Balance por Antigüedad Resumido (Clientes)</field>
+        <field name="res_model">lms.aging.receivable.summary.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ========================= -->
+    <!-- CxP Detalle -->
+    <!-- ========================= -->
+    <record id="action_aging_payable_report_wizard" model="ir.actions.act_window">
+        <field name="name">Balance por Antigüedad (Proveedores)</field>
+        <field name="res_model">lms.aging.payable.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ========================= -->
+    <!-- CxP Resumido -->
+    <!-- ========================= -->
+    <record id="action_aging_payable_summary_wizard" model="ir.actions.act_window">
+        <field name="name">Balance por Antigüedad Resumido (Proveedores)</field>
+        <field name="res_model">lms.aging.payable.summary.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

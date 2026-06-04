@@ -37,8 +37,8 @@ class PosDailyReportLine(models.TransientModel):
     order_count = fields.Integer(string="Cant. Órdenes")
 
     cash_amount = fields.Float(string="Efectivo")
-    cash_real = fields.Float(string="Contado")
-    cash_diff = fields.Float(string="Diferencia")
+    cash_real = fields.Float(string="Total Efectivo Cobrado")
+    cash_diff = fields.Float(string="Liquidación Chofer")
     card_amount = fields.Float(string="Tarjeta")
     transfer_amount = fields.Float(string="Transferencia")
     tax_amount = fields.Float(string="ITBIS")
@@ -52,8 +52,8 @@ class PosDailyReportLine(models.TransientModel):
     # Campos display para evitar mostrar 0.00 en filas cabecera
     order_count_display = fields.Char(string="Cant. Órdenes", compute='_compute_display_fields', store=False)
     cash_amount_display = fields.Char(string="Efectivo", compute='_compute_display_fields', store=False)
-    cash_real_display = fields.Char(string="Contado", compute='_compute_display_fields', store=False)
-    cash_diff_display = fields.Char(string="Diferencia", compute='_compute_display_fields', store=False)
+    cash_real_display = fields.Char(string="Total Efectivo Cobrado", compute='_compute_display_fields', store=False)
+    cash_diff_display = fields.Char(string="Liquidación Chofer", compute='_compute_display_fields', store=False)
     card_amount_display = fields.Char(string="Tarjeta", compute='_compute_display_fields', store=False)
     transfer_amount_display = fields.Char(string="Transferencia", compute='_compute_display_fields', store=False)
     tax_amount_display = fields.Char(string="ITBIS", compute='_compute_display_fields', store=False)

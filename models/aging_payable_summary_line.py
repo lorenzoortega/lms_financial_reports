@@ -23,3 +23,32 @@ class AgingPayableSummaryLine(models.TransientModel):
     bucket_31_60 = fields.Float(string="31-60")
     bucket_61_90 = fields.Float(string="61-90")
     bucket_90_plus = fields.Float(string="90+")
+
+    def action_view_invoices(self):
+        self.ensure_one()
+
+        if self.is_total or not self.partner_id or not self.wizard_id:
+            return False
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Facturas Proveedor',
+            'res_model': 'account.move',
+            'view_mode': 'list,form',
+            'views': [
+                (self.env.ref('lms_financial_reports.view_account_move_payable_drilldown_list').id, 'list'),
+                (False, 'form'),
+            ],
+            'domain': [
+                ('move_type', '=', 'in_invoice'),
+                ('state', '=', 'posted'),
+                ('amount_residual', '>', 0),
+                ('partner_id', '=', self.partner_id.id),
+                ('invoice_date', '!=', False),
+                ('invoice_date', '<=', self.wizard_id.date_to),
+            ],
+            'context': {
+                'create': False,
+            },
+            'target': 'current',
+        }
