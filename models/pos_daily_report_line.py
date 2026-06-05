@@ -27,7 +27,7 @@ class PosDailyReportLine(models.TransientModel):
 
     date_label = fields.Char(string="Fecha / POS", compute='_compute_date_label', store=False)
     group_name = fields.Char(string="Cabecera")
-    subtotal_label = fields.Char(string="Etiqueta Subtotal")
+    subtotal_label = fields.Char(string="Etiqueta Total")
 
     date = fields.Date(string="Fecha")
     session_range = fields.Char(string="Rango Sesión")
@@ -37,12 +37,15 @@ class PosDailyReportLine(models.TransientModel):
     order_count = fields.Integer(string="Cant. Órdenes")
 
     cash_amount = fields.Float(string="Efectivo")
-    cash_real = fields.Float(string="Total Efectivo Cobrado")
-    cash_diff = fields.Float(string="Liquidación Chofer")
+    driver_liquidation_amount = fields.Float(string="Liquidación Chofer")
+    total_cash_collected = fields.Float(string="Total Efectivo Cobrado")
+    cash_counted = fields.Float(string="Efectivo Contado")
+    cash_difference = fields.Float(string="Diferencia Efectivo")
+    has_cash_counted = fields.Boolean(string="Tiene Efectivo Contado", default=False)
+
     card_amount = fields.Float(string="Tarjeta")
     transfer_amount = fields.Float(string="Transferencia")
-    tax_amount = fields.Float(string="ITBIS")
-    total_amount = fields.Float(string="Total")
+    total_sales = fields.Float(string="TOTAL VENTAS")
 
     pos_name = fields.Char(string="Punto de Venta")
     session_id = fields.Many2one('pos.session', string="Sesión POS")
@@ -52,12 +55,13 @@ class PosDailyReportLine(models.TransientModel):
     # Campos display para evitar mostrar 0.00 en filas cabecera
     order_count_display = fields.Char(string="Cant. Órdenes", compute='_compute_display_fields', store=False)
     cash_amount_display = fields.Char(string="Efectivo", compute='_compute_display_fields', store=False)
-    cash_real_display = fields.Char(string="Total Efectivo Cobrado", compute='_compute_display_fields', store=False)
-    cash_diff_display = fields.Char(string="Liquidación Chofer", compute='_compute_display_fields', store=False)
+    driver_liquidation_amount_display = fields.Char(string="Liquidación Chofer", compute='_compute_display_fields', store=False)
+    total_cash_collected_display = fields.Char(string="Total Efectivo Cobrado", compute='_compute_display_fields', store=False)
+    cash_counted_display = fields.Char(string="Efectivo Contado", compute='_compute_display_fields', store=False)
+    cash_difference_display = fields.Char(string="Diferencia Efectivo", compute='_compute_display_fields', store=False)
     card_amount_display = fields.Char(string="Tarjeta", compute='_compute_display_fields', store=False)
     transfer_amount_display = fields.Char(string="Transferencia", compute='_compute_display_fields', store=False)
-    tax_amount_display = fields.Char(string="ITBIS", compute='_compute_display_fields', store=False)
-    total_amount_display = fields.Char(string="Total", compute='_compute_display_fields', store=False)
+    total_sales_display = fields.Char(string="TOTAL VENTAS", compute='_compute_display_fields', store=False)
 
     @api.depends('is_group', 'is_subtotal')
     def _compute_row_type(self):
@@ -75,32 +79,42 @@ class PosDailyReportLine(models.TransientModel):
             if rec.is_group:
                 rec.date_label = rec.group_name or ''
             elif rec.is_subtotal:
-                rec.date_label = rec.subtotal_label or 'SUBTOTAL'
+                rec.date_label = rec.subtotal_label or 'TOTAL'
             else:
                 rec.date_label = str(rec.date or '')
 
     @api.depends(
-        'is_group', 'order_count',
-        'cash_amount', 'cash_real', 'cash_diff',
-        'card_amount', 'transfer_amount', 'tax_amount', 'total_amount'
+        'is_group', 'is_subtotal', 'has_cash_counted',
+        'order_count',
+        'cash_amount', 'driver_liquidation_amount', 'total_cash_collected',
+        'cash_counted', 'cash_difference',
+        'card_amount', 'transfer_amount', 'total_sales'
     )
     def _compute_display_fields(self):
         for rec in self:
             if rec.is_group:
                 rec.order_count_display = ''
                 rec.cash_amount_display = ''
-                rec.cash_real_display = ''
-                rec.cash_diff_display = ''
+                rec.driver_liquidation_amount_display = ''
+                rec.total_cash_collected_display = ''
+                rec.cash_counted_display = ''
+                rec.cash_difference_display = ''
                 rec.card_amount_display = ''
                 rec.transfer_amount_display = ''
-                rec.tax_amount_display = ''
-                rec.total_amount_display = ''
+                rec.total_sales_display = ''
             else:
                 rec.order_count_display = str(rec.order_count or 0)
                 rec.cash_amount_display = f"{rec.cash_amount:,.2f}"
-                rec.cash_real_display = f"{rec.cash_real:,.2f}"
-                rec.cash_diff_display = f"{rec.cash_diff:,.2f}"
+                rec.driver_liquidation_amount_display = f"{rec.driver_liquidation_amount:,.2f}"
+                rec.total_cash_collected_display = f"{rec.total_cash_collected:,.2f}"
+
+                if rec.has_cash_counted or rec.is_subtotal:
+                    rec.cash_counted_display = f"{rec.cash_counted:,.2f}"
+                    rec.cash_difference_display = f"{rec.cash_difference:,.2f}"
+                else:
+                    rec.cash_counted_display = ''
+                    rec.cash_difference_display = ''
+
                 rec.card_amount_display = f"{rec.card_amount:,.2f}"
                 rec.transfer_amount_display = f"{rec.transfer_amount:,.2f}"
-                rec.tax_amount_display = f"{rec.tax_amount:,.2f}"
-                rec.total_amount_display = f"{rec.total_amount:,.2f}"
+                rec.total_sales_display = f"{rec.total_sales:,.2f}"

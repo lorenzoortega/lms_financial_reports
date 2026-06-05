@@ -9,9 +9,9 @@
                   delete="false"
                   edit="false"
                   decoration-bf="is_group or is_subtotal"
-                  decoration-danger="not is_group and not is_subtotal and cash_diff &lt; 0"
-                  decoration-success="not is_group and not is_subtotal and cash_diff == 0"
-                  decoration-warning="not is_group and not is_subtotal and cash_diff &gt; 0">
+                  decoration-danger="not is_group and not is_subtotal and has_cash_counted and cash_difference &lt; 0"
+                  decoration-success="not is_group and not is_subtotal and has_cash_counted and cash_difference == 0"
+                  decoration-warning="not is_group and not is_subtotal and has_cash_counted and cash_difference &gt; 0">
 
                 <field name="wizard_id" column_invisible="1"/>
                 <field name="session_id" column_invisible="1"/>
@@ -20,21 +20,23 @@
                 <field name="is_group" column_invisible="1"/>
                 <field name="is_subtotal" column_invisible="1"/>
                 <field name="row_type" column_invisible="1"/>
+                <field name="has_cash_counted" column_invisible="1"/>
 
                 <field name="date_label" string="Fecha / POS"/>
-                <field name="session_range" string="Rango Sesión"/>
-                <field name="session_name" string="Sesión"/>
                 <field name="session_state" string="Estado"/>
                 <field name="cashier_name" string="Cajero"/>
-
                 <field name="order_count_display" string="Cant. Órdenes"/>
+                <field name="session_name" string="Sesión"/>
+                <field name="session_range" string="Rango Sesión"/>
+
                 <field name="cash_amount_display" string="Efectivo"/>
-                <field name="cash_diff_display" string="Liquidación Chofer"/>
-                <field name="cash_real_display" string="Total Efectivo Cobrado"/>
+                <field name="driver_liquidation_amount_display" string="Liquidación Chofer"/>
+                <field name="total_cash_collected_display" string="Total Efectivo Cobrado"/>
+                <field name="cash_counted_display" string="Efectivo Contado"/>
+                <field name="cash_difference_display" string="Diferencia Efectivo"/>
                 <field name="card_amount_display" string="Tarjeta"/>
                 <field name="transfer_amount_display" string="Transferencia"/>
-                <field name="tax_amount_display" string="ITBIS"/>
-                <field name="total_amount_display" string="Total"/>
+                <field name="total_sales_display" string="TOTAL VENTAS"/>
 
             </list>
         </field>

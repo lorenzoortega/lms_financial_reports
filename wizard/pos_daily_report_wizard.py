@@ -78,15 +78,6 @@ class PosDailyReportWizard(models.TransientModel):
 
         return cash_amount, card_amount, transfer_amount
 
-    def _get_session_tax_amount(self, orders):
-        amount_tax = 0.0
-        for order in orders:
-            if order.account_move:
-                amount_tax += order.account_move.amount_tax or 0.0
-            else:
-                amount_tax += order.amount_tax or 0.0
-        return amount_tax
-
     def _get_driver_liquidation_amounts_by_session(self, sessions):
         result = {session.id: 0.0 for session in sessions}
 
@@ -112,6 +103,22 @@ class PosDailyReportWizard(models.TransientModel):
 
         return result
 
+    def _get_session_cash_counted(self, session):
+        """
+        Efectivo contado físicamente al cierre.
+
+        En Odoo POS normalmente el efectivo contado al cierre queda en
+        cash_register_balance_end_real. Si la sesión está abierta, no se
+        considera diferencia todavía para no mostrar faltantes falsos.
+        """
+        if session.state != 'closed':
+            return 0.0, False
+
+        if 'cash_register_balance_end_real' in session._fields:
+            return session.cash_register_balance_end_real or 0.0, True
+
+        return 0.0, False
+
     def _get_report_data(self):
         self.ensure_one()
 
@@ -132,13 +139,15 @@ class PosDailyReportWizard(models.TransientModel):
         pos_groups = OrderedDict()
 
         totals = {
+            'order_count': 0,
             'cash_amount': 0.0,
-            'cash_real': 0.0,
-            'cash_diff': 0.0,
+            'driver_liquidation_amount': 0.0,
+            'total_cash_collected': 0.0,
+            'cash_counted': 0.0,
+            'cash_difference': 0.0,
             'card_amount': 0.0,
             'transfer_amount': 0.0,
-            'tax_amount': 0.0,
-            'total_amount': 0.0,
+            'total_sales': 0.0,
         }
 
         for session in sessions:
@@ -157,28 +166,18 @@ class PosDailyReportWizard(models.TransientModel):
                     'pos': pos,
                     'pos_name': pos_name,
                     'sessions': [],
-                    'subtotal': {
-                        'cash_amount': 0.0,
-                        'cash_real': 0.0,
-                        'cash_diff': 0.0,
-                        'card_amount': 0.0,
-                        'transfer_amount': 0.0,
-                        'tax_amount': 0.0,
-                        'total_amount': 0.0,
-                    }
                 }
 
             order_count = len(session_orders)
             cash_amount, card_amount, transfer_amount = self._classify_payments(session_orders)
-            tax_amount = self._get_session_tax_amount(session_orders)
 
-            # Reutilizamos campos técnicos existentes para no romper vistas/Excel:
-            # cash_diff = Liquidación Chofer
-            # cash_real = Total Efectivo Cobrado
-            cash_diff = driver_liquidation_amount
-            cash_real = cash_amount + driver_liquidation_amount
+            total_cash_collected = cash_amount + driver_liquidation_amount
+            cash_counted, has_cash_counted = self._get_session_cash_counted(session)
+            cash_difference = cash_counted - total_cash_collected if has_cash_counted else 0.0
 
-            total_amount = cash_amount + driver_liquidation_amount + card_amount + transfer_amount
+            # TOTAL VENTAS representa lo vendido según sistema.
+            # No se afecta por sobrantes o faltantes de efectivo.
+            total_sales = total_cash_collected + card_amount + transfer_amount
 
             local_start = fields.Datetime.context_timestamp(self, session.start_at) if session.start_at else False
 
@@ -190,22 +189,33 @@ class PosDailyReportWizard(models.TransientModel):
                 'cashier_name': session.user_id.display_name or '',
                 'order_count': order_count,
                 'cash_amount': cash_amount,
-                'cash_real': cash_real,
-                'cash_diff': cash_diff,
+                'driver_liquidation_amount': driver_liquidation_amount,
+                'total_cash_collected': total_cash_collected,
+                'cash_counted': cash_counted,
+                'cash_difference': cash_difference,
+                'has_cash_counted': has_cash_counted,
                 'card_amount': card_amount,
                 'transfer_amount': transfer_amount,
-                'tax_amount': tax_amount,
-                'total_amount': total_amount,
+                'total_sales': total_sales,
                 'session_id': session.id,
                 'pos_config_id': pos.id if pos else False,
                 'cashier_id': session.user_id.id if session.user_id else False,
                 'pos_name': pos_name,
             }
+
             pos_groups[pos_key]['sessions'].append(session_vals)
 
-            for key in ['cash_amount', 'cash_real', 'cash_diff', 'card_amount', 'transfer_amount', 'tax_amount', 'total_amount']:
-                pos_groups[pos_key]['subtotal'][key] += session_vals[key]
-                totals[key] += session_vals[key]
+            totals['order_count'] += order_count
+            totals['cash_amount'] += cash_amount
+            totals['driver_liquidation_amount'] += driver_liquidation_amount
+            totals['total_cash_collected'] += total_cash_collected
+            totals['card_amount'] += card_amount
+            totals['transfer_amount'] += transfer_amount
+            totals['total_sales'] += total_sales
+
+            if has_cash_counted:
+                totals['cash_counted'] += cash_counted
+                totals['cash_difference'] += cash_difference
 
         return {
             'pos_groups': list(pos_groups.values()),
@@ -242,36 +252,22 @@ class PosDailyReportWizard(models.TransientModel):
                 Line.create(vals)
                 sequence += 1
 
-            Line.create({
-                'wizard_id': self.id,
-                'sequence': sequence,
-                'is_group': False,
-                'is_subtotal': True,
-                'subtotal_label': 'SUBTOTAL %s' % group['pos_name'],
-                'pos_name': group['pos_name'],
-                'cash_amount': group['subtotal']['cash_amount'],
-                'cash_real': group['subtotal']['cash_real'],
-                'cash_diff': group['subtotal']['cash_diff'],
-                'card_amount': group['subtotal']['card_amount'],
-                'transfer_amount': group['subtotal']['transfer_amount'],
-                'tax_amount': group['subtotal']['tax_amount'],
-                'total_amount': group['subtotal']['total_amount'],
-            })
-            sequence += 1
-
         Line.create({
             'wizard_id': self.id,
             'sequence': sequence,
             'is_group': False,
             'is_subtotal': True,
             'subtotal_label': 'TOTAL VENTAS POS DIA',
+            'order_count': data['totals']['order_count'],
             'cash_amount': data['totals']['cash_amount'],
-            'cash_real': data['totals']['cash_real'],
-            'cash_diff': data['totals']['cash_diff'],
+            'driver_liquidation_amount': data['totals']['driver_liquidation_amount'],
+            'total_cash_collected': data['totals']['total_cash_collected'],
+            'cash_counted': data['totals']['cash_counted'],
+            'cash_difference': data['totals']['cash_difference'],
+            'has_cash_counted': True,
             'card_amount': data['totals']['card_amount'],
             'transfer_amount': data['totals']['transfer_amount'],
-            'tax_amount': data['totals']['tax_amount'],
-            'total_amount': data['totals']['total_amount'],
+            'total_sales': data['totals']['total_sales'],
         })
 
         return {

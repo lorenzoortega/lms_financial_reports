@@ -35,10 +35,6 @@ class PosDailyReportXlsx(models.AbstractModel):
             'bold': True,
             'bg_color': '#EAEAEA'
         })
-        subtotal_format = workbook.add_format({
-            'bold': True,
-            'bg_color': '#F2F2F2'
-        })
 
         row = 0
         sheet.write(row, 0, "REPORTE VENTAS POS DIA", title_format)
@@ -53,10 +49,22 @@ class PosDailyReportXlsx(models.AbstractModel):
         row += 1
 
         headers = [
-            "Fecha", "RANGO SESIÓN", "Sesión", "Estado", "Cajero", "Cant. Órdenes",
-            "Efectivo", "Liquidación Chofer", "Total Efectivo Cobrado",
-            "Tarjeta", "Transferencia", "ITBIS", "Total Ventas"
+            "Fecha / POS",
+            "Estado",
+            "Cajero",
+            "Cant. Órdenes",
+            "Sesión",
+            "Rango Sesión",
+            "Efectivo",
+            "Liquidación Chofer",
+            "Total Efectivo Cobrado",
+            "Efectivo Contado",
+            "Diferencia Efectivo",
+            "Tarjeta",
+            "Transferencia",
+            "TOTAL VENTAS",
         ]
+
         for col, header in enumerate(headers):
             sheet.write(row, col, header, header_format)
         row += 1
@@ -67,42 +75,45 @@ class PosDailyReportXlsx(models.AbstractModel):
 
             for line in group['sessions']:
                 sheet.write(row, 0, str(line['date'] or ''))
-                sheet.write(row, 1, line['session_range'])
-                sheet.write(row, 2, line['session_name'])
-                sheet.write(row, 3, line['session_state'])
-                sheet.write(row, 4, line['cashier_name'])
-                sheet.write(row, 5, line['order_count'])
+                sheet.write(row, 1, line['session_state'])
+                sheet.write(row, 2, line['cashier_name'])
+                sheet.write(row, 3, line['order_count'])
+                sheet.write(row, 4, line['session_name'])
+                sheet.write(row, 5, line['session_range'])
+
                 sheet.write(row, 6, line['cash_amount'], number_format)
-                sheet.write(row, 7, line['cash_diff'], number_format)
-                sheet.write(row, 8, line['cash_real'], number_format)
-                sheet.write(row, 9, line['card_amount'], number_format)
-                sheet.write(row, 10, line['transfer_amount'], number_format)
-                sheet.write(row, 11, line['tax_amount'], number_format)
-                sheet.write(row, 12, line['total_amount'], number_format)
+                sheet.write(row, 7, line['driver_liquidation_amount'], number_format)
+                sheet.write(row, 8, line['total_cash_collected'], number_format)
+
+                if line.get('has_cash_counted'):
+                    sheet.write(row, 9, line['cash_counted'], number_format)
+                    sheet.write(row, 10, line['cash_difference'], number_format)
+                else:
+                    sheet.write(row, 9, '')
+                    sheet.write(row, 10, '')
+
+                sheet.write(row, 11, line['card_amount'], number_format)
+                sheet.write(row, 12, line['transfer_amount'], number_format)
+                sheet.write(row, 13, line['total_sales'], number_format)
                 row += 1
 
-            sheet.write(row, 0, f"SUBTOTAL {group['pos_name']}", subtotal_format)
-            sheet.write(row, 6, group['subtotal']['cash_amount'], bold_number_format)
-            sheet.write(row, 7, group['subtotal']['cash_diff'], bold_number_format)
-            sheet.write(row, 8, group['subtotal']['cash_real'], bold_number_format)
-            sheet.write(row, 9, group['subtotal']['card_amount'], bold_number_format)
-            sheet.write(row, 10, group['subtotal']['transfer_amount'], bold_number_format)
-            sheet.write(row, 11, group['subtotal']['tax_amount'], bold_number_format)
-            sheet.write(row, 12, group['subtotal']['total_amount'], bold_number_format)
-            row += 2
-
+        row += 1
         sheet.write(row, 0, "TOTAL VENTAS POS DIA", bold_format)
+        sheet.write(row, 3, report_data['totals']['order_count'])
         sheet.write(row, 6, report_data['totals']['cash_amount'], bold_number_format)
-        sheet.write(row, 7, report_data['totals']['cash_diff'], bold_number_format)
-        sheet.write(row, 8, report_data['totals']['cash_real'], bold_number_format)
-        sheet.write(row, 9, report_data['totals']['card_amount'], bold_number_format)
-        sheet.write(row, 10, report_data['totals']['transfer_amount'], bold_number_format)
-        sheet.write(row, 11, report_data['totals']['tax_amount'], bold_number_format)
-        sheet.write(row, 12, report_data['totals']['total_amount'], bold_number_format)
+        sheet.write(row, 7, report_data['totals']['driver_liquidation_amount'], bold_number_format)
+        sheet.write(row, 8, report_data['totals']['total_cash_collected'], bold_number_format)
+        sheet.write(row, 9, report_data['totals']['cash_counted'], bold_number_format)
+        sheet.write(row, 10, report_data['totals']['cash_difference'], bold_number_format)
+        sheet.write(row, 11, report_data['totals']['card_amount'], bold_number_format)
+        sheet.write(row, 12, report_data['totals']['transfer_amount'], bold_number_format)
+        sheet.write(row, 13, report_data['totals']['total_sales'], bold_number_format)
 
-        sheet.set_column(0, 0, 12)
-        sheet.set_column(1, 1, 38)
-        sheet.set_column(2, 4, 14)
-        sheet.set_column(5, 5, 14)
-        sheet.set_column(6, 8, 22)
-        sheet.set_column(9, 12, 14)
+        sheet.set_column(0, 0, 16)
+        sheet.set_column(1, 1, 12)
+        sheet.set_column(2, 2, 18)
+        sheet.set_column(3, 3, 14)
+        sheet.set_column(4, 4, 16)
+        sheet.set_column(5, 5, 38)
+        sheet.set_column(6, 10, 22)
+        sheet.set_column(11, 13, 16)
