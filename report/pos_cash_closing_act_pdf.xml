@@ -1,0 +1,184 @@
+<odoo>
+
+    <record id="action_pos_cash_closing_act_pdf" model="ir.actions.report">
+        <field name="name">Acta de Cierre Caja POS</field>
+        <field name="model">lms.pos.cash.closing.act.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">lms_financial_reports.pos_cash_closing_act_pdf_template</field>
+        <field name="report_file">lms_financial_reports.pos_cash_closing_act_pdf_template</field>
+        <field name="groups_id" eval="[(4, ref('lms_financial_reports.group_print_pos_cash_closing_act'))]"/>
+    </record>
+
+    <template id="pos_cash_closing_act_pdf_template">
+        <t t-call="web.basic_layout">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="data" t-value="o._get_report_data()"/>
+                <t t-set="totals" t-value="data['totals']"/>
+
+                <div class="page" style="font-size:12px;">
+                    <div style="text-align:center; border-bottom:2px solid #333; padding-bottom:8px; margin-bottom:12px;">
+                        <h2 style="margin:0; font-size:20px;">ACTA DE CIERRE CAJA POS</h2>
+                        <div style="font-size:13px; margin-top:4px;">
+                            <strong><span t-esc="data['company_name']"/></strong>
+                            <t t-if="data['company_vat']">
+                                <br/>RNC: <span t-esc="data['company_vat']"/>
+                            </t>
+                        </div>
+                    </div>
+
+                    <table style="width:100%; margin-bottom:10px; font-size:12px;">
+                        <tr>
+                            <td style="width:18%;"><strong>Fecha:</strong></td>
+                            <td style="width:32%;"><span t-esc="data['date']"/></td>
+                            <td style="width:18%;"><strong>Punto de Venta:</strong></td>
+                            <td style="width:32%;"><span t-esc="data['pos_name']"/></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Generado por:</strong></td>
+                            <td><span t-esc="data['generated_by']"/></td>
+                            <td><strong>Generado el:</strong></td>
+                            <td><span t-esc="data['generated_at']"/></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sesiones:</strong></td>
+                            <td><span t-esc="totals['session_count']"/> / Cerradas: <span t-esc="totals['closed_session_count']"/></td>
+                            <td><strong>Resultado:</strong></td>
+                            <td><strong><span t-esc="totals['result_label']"/></strong></td>
+                        </tr>
+                    </table>
+
+                    <h4 style="margin:12px 0 6px 0; font-size:14px; background:#eeeeee; padding:5px;">Detalle de sesiones</h4>
+                    <table class="table table-sm table-bordered" style="width:100%; font-size:10px; border-collapse:collapse;">
+                        <thead style="background-color:#f2f2f2;">
+                            <tr>
+                                <th>Sesión</th>
+                                <th>Estado</th>
+                                <th>Cajero</th>
+                                <th>Apertura</th>
+                                <th>Cierre</th>
+                                <th style="text-align:right;">Órdenes</th>
+                                <th style="text-align:right;">Efectivo Sist.</th>
+                                <th style="text-align:right;">Liq. Chofer</th>
+                                <th style="text-align:right;">Efectivo Esperado</th>
+                                <th style="text-align:right;">Efectivo Contado</th>
+                                <th style="text-align:right;">Diferencia</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="data['sessions']" t-as="line">
+                                <tr>
+                                    <td><span t-esc="line['session_name']"/></td>
+                                    <td><span t-esc="line['state']"/></td>
+                                    <td><span t-esc="line['cashier_name']"/></td>
+                                    <td><span t-esc="line['opening_time']"/></td>
+                                    <td><span t-esc="line['closing_time']"/></td>
+                                    <td style="text-align:right;"><span t-esc="line['order_count']"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['cash_amount'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['driver_liquidation_amount'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['total_cash_expected'])"/></td>
+                                    <td style="text-align:right;">
+                                        <t t-if="line['has_cash_counted']"><span t-esc="'{:,.2f}'.format(line['cash_counted'])"/></t>
+                                        <t t-else="">-</t>
+                                    </td>
+                                    <td style="text-align:right;">
+                                        <t t-if="line['has_cash_counted']"><span t-esc="'{:,.2f}'.format(line['cash_difference'])"/></t>
+                                        <t t-else="">-</t>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+
+                    <h4 style="margin:12px 0 6px 0; font-size:14px; background:#eeeeee; padding:5px;">Resumen del cuadre</h4>
+                    <table style="width:100%; font-size:12px; border-collapse:collapse;" class="table table-sm table-bordered">
+                        <tr>
+                            <td style="width:55%;"><strong>Total ventas / cobros según sistema</strong></td>
+                            <td style="text-align:right; width:45%;">RD$ <span t-esc="'{:,.2f}'.format(totals['total_collected'])"/></td>
+                        </tr>
+                        <tr>
+                            <td>Efectivo ventas POS</td>
+                            <td style="text-align:right;">RD$ <span t-esc="'{:,.2f}'.format(totals['cash_amount'])"/></td>
+                        </tr>
+                        <tr>
+                            <td>Liquidación Chofer</td>
+                            <td style="text-align:right;">RD$ <span t-esc="'{:,.2f}'.format(totals['driver_liquidation_amount'])"/></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Efectivo esperado</strong></td>
+                            <td style="text-align:right;"><strong>RD$ <span t-esc="'{:,.2f}'.format(totals['total_cash_expected'])"/></strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Efectivo contado</strong></td>
+                            <td style="text-align:right;"><strong>RD$ <span t-esc="'{:,.2f}'.format(totals['cash_counted'])"/></strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Diferencia de efectivo</strong></td>
+                            <td style="text-align:right;"><strong>RD$ <span t-esc="'{:,.2f}'.format(totals['cash_difference'])"/></strong></td>
+                        </tr>
+                        <tr>
+                            <td>Tarjeta</td>
+                            <td style="text-align:right;">RD$ <span t-esc="'{:,.2f}'.format(totals['card_amount'])"/></td>
+                        </tr>
+                        <tr>
+                            <td>Transferencia</td>
+                            <td style="text-align:right;">RD$ <span t-esc="'{:,.2f}'.format(totals['transfer_amount'])"/></td>
+                        </tr>
+                        <tr>
+                            <td>Otros métodos</td>
+                            <td style="text-align:right;">RD$ <span t-esc="'{:,.2f}'.format(totals['other_amount'])"/></td>
+                        </tr>
+                    </table>
+
+                    <h4 style="margin:12px 0 6px 0; font-size:14px; background:#eeeeee; padding:5px;">Resumen por método de pago</h4>
+                    <table class="table table-sm table-bordered" style="width:100%; font-size:11px; border-collapse:collapse;">
+                        <thead style="background-color:#f2f2f2;">
+                            <tr>
+                                <th>Método</th>
+                                <th style="text-align:right;">Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="data['payment_methods']" t-as="method_line">
+                                <tr>
+                                    <td><span t-esc="method_line['name']"/></td>
+                                    <td style="text-align:right;">RD$ <span t-esc="'{:,.2f}'.format(method_line['amount'])"/></td>
+                                </tr>
+                            </t>
+                            <t t-if="totals['driver_liquidation_amount']">
+                                <tr>
+                                    <td>Liquidación Chofer</td>
+                                    <td style="text-align:right;">RD$ <span t-esc="'{:,.2f}'.format(totals['driver_liquidation_amount'])"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top:14px; border:1px solid #999; min-height:60px; padding:8px;">
+                        <strong>Observaciones / Motivo de diferencia:</strong>
+                        <br/><br/>
+                        ____________________________________________________________________________________
+                        <br/><br/>
+                        ____________________________________________________________________________________
+                    </div>
+
+                    <table style="width:100%; margin-top:45px; font-size:12px;">
+                        <tr>
+                            <td style="width:45%; text-align:center; border-top:1px solid #000; padding-top:5px;">
+                                Firma Cajero
+                            </td>
+                            <td style="width:10%;"></td>
+                            <td style="width:45%; text-align:center; border-top:1px solid #000; padding-top:5px;">
+                                Firma Supervisor / Encargado
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div style="margin-top:16px; font-size:10px; color:#555;">
+                        Documento generado desde LMS Financial Reports. Este acta deja constancia del cierre operativo de caja POS para revisión y firma interna.
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>

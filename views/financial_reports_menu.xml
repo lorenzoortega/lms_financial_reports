@@ -68,4 +68,17 @@
               action="action_pos_daily_report_wizard"
               sequence="20"/>
 
+    <menuitem id="menu_lms_pos_cash_closing_root"
+              name="LMS_Cuadres_Caja"
+              parent="point_of_sale.menu_point_root"
+              groups="lms_financial_reports.group_print_pos_cash_closing_act"
+              sequence="95"/>
+
+    <menuitem id="menu_action_pos_cash_closing_act_wizard"
+              name="Acta de Cierre Caja POS"
+              parent="menu_lms_pos_cash_closing_root"
+              action="action_pos_cash_closing_act_wizard"
+              groups="lms_financial_reports.group_print_pos_cash_closing_act"
+              sequence="10"/>
+
 </odoo>

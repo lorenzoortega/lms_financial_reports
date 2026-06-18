@@ -1,0 +1,44 @@
+<odoo>
+
+    <record id="view_pos_cash_closing_act_line_list" model="ir.ui.view">
+        <field name="name">lms.pos.cash.closing.act.line.list</field>
+        <field name="model">lms.pos.cash.closing.act.line</field>
+        <field name="arch" type="xml">
+            <list string="Acta de Cierre Caja POS"
+                  create="false"
+                  delete="false"
+                  edit="false"
+                  decoration-bf="is_total"
+                  decoration-danger="has_cash_counted and cash_difference &lt; 0"
+                  decoration-success="has_cash_counted and cash_difference == 0"
+                  decoration-warning="has_cash_counted and cash_difference &gt; 0">
+
+                <field name="wizard_id" column_invisible="1"/>
+                <field name="is_total" column_invisible="1"/>
+                <field name="has_cash_counted" column_invisible="1"/>
+                <field name="cash_difference" column_invisible="1"/>
+
+                <field name="date"/>
+                <field name="pos_name"/>
+                <field name="session_name"/>
+                <field name="session_state"/>
+                <field name="cashier_name"/>
+                <field name="opening_time"/>
+                <field name="closing_time"/>
+                <field name="order_count_display" string="Órdenes"/>
+                <field name="cash_amount_display" string="Efectivo Sistema"/>
+                <field name="driver_liquidation_amount_display" string="Liquidación Chofer"/>
+                <field name="total_cash_expected_display" string="Efectivo Esperado"/>
+                <field name="cash_counted_display" string="Efectivo Contado"/>
+                <field name="cash_difference_display" string="Diferencia"/>
+                <field name="card_amount_display" string="Tarjeta"/>
+                <field name="transfer_amount_display" string="Transferencia"/>
+                <field name="other_amount_display" string="Otros"/>
+                <field name="total_collected_display" string="Total Cobrado"/>
+                <field name="result_label" string="Resultado"/>
+
+            </list>
+        </field>
+    </record>
+
+</odoo>

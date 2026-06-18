@@ -1,0 +1,51 @@
+
+<odoo>
+    <record id="view_pos_cash_closing_act_wizard_form" model="ir.ui.view">
+        <field name="name">lms.pos.cash.closing.act.wizard.form</field>
+        <field name="model">lms.pos.cash.closing.act.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Acta de Cierre Caja POS">
+                <sheet>
+                    <group>
+                        <field name="session_id"/>
+                    </group>
+
+                    <group string="Conteo / validacion Cobros CxC">
+                        <group>
+                            <field name="cxc_cash_counted" string="Efectivo CxC contado / Cajita CxC"/>
+                            <field name="cxc_card_counted"/>
+                        </group>
+                        <group>
+                            <field name="cxc_transfer_counted"/>
+                            <field name="cxc_other_counted"/>
+                        </group>
+                    </group>
+
+                    <p class="text-muted">
+                        Los valores del POS se toman del cierre oficial de Odoo POS y no se modifican en esta acta.
+                        Solo capture o confirme los valores relacionados con Cobros CxC.
+                    </p>
+                </sheet>
+                <footer>
+                    <button
+                        name="action_print_report"
+                        type="object"
+                        string="Imprimir Acta"
+                        class="btn-primary"/>
+                    <button
+                        string="Cancelar"
+                        class="btn-secondary"
+                        special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_pos_cash_closing_act_wizard" model="ir.actions.act_window">
+        <field name="name">Acta de Cierre Caja POS</field>
+        <field name="res_model">lms.pos.cash.closing.act.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_pos_cash_closing_act_wizard_form"/>
+        <field name="target">new</field>
+    </record>
+</odoo>

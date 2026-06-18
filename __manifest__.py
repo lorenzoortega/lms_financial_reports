@@ -1,6 +1,6 @@
 {
     'name': 'LMS Financial Reports',
-    'version': '1.0',
+    'version': '1.4',
     'summary': 'Reportes Financieros Profesionales LMS',
     'author': 'LMS',
     'depends': [
@@ -11,6 +11,7 @@
     'data': [
 
         # Seguridad
+        'security/security.xml',
         'security/ir.model.access.csv',
 
         # =========================
@@ -44,6 +45,16 @@
         'views/pos_daily_report_wizard_view.xml',
         'report/pos_daily_report_pdf.xml',
         'report/pos_daily_report_xlsx.xml',
+
+        # =========================
+        # ACTA DE CIERRE CAJA POS
+        # =========================
+        'views/pos_cash_closing_act_line_views.xml',
+        'views/pos_cash_closing_act_wizard_view.xml',
+        'report/pos_cash_closing_act_pdf.xml',
+        'views/pos_cash_closing_act_wizard_view.xml',
+        'report/pos_cash_closing_act_report.xml',
+
 
         # =========================
         # CONTABILIDAD - CUENTA POR COBRAR

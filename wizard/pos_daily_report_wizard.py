@@ -171,13 +171,24 @@ class PosDailyReportWizard(models.TransientModel):
             order_count = len(session_orders)
             cash_amount, card_amount, transfer_amount = self._classify_payments(session_orders)
 
-            total_cash_collected = cash_amount + driver_liquidation_amount
+            # IMPORTANTE:
+            # La liquidación de chofer ya entra como pago real de efectivo
+            # dentro de los pagos POS de la sesión cuando se registra con
+            # el método Efectivo POSxx. Por eso NO debe sumarse otra vez
+            # al efectivo cobrado, porque duplicaría el monto en el cuadre.
+            #
+            # La columna driver_liquidation_amount queda solo como desglose
+            # informativo: indica cuánto del efectivo POS corresponde a
+            # liquidaciones de chofer.
+            total_cash_collected = cash_amount
             cash_counted, has_cash_counted = self._get_session_cash_counted(session)
             cash_difference = cash_counted - total_cash_collected if has_cash_counted else 0.0
 
-            # TOTAL VENTAS representa lo vendido según sistema.
-            # No se afecta por sobrantes o faltantes de efectivo.
-            total_sales = total_cash_collected + card_amount + transfer_amount
+            # Total Efectivo y Equivalentes representa el dinero recibido
+            # por medios de cobro: efectivo + tarjeta + transferencia.
+            # No se afecta por sobrantes/faltantes, y tampoco suma
+            # liquidación chofer nuevamente porque ya está dentro de efectivo.
+            total_sales = cash_amount + card_amount + transfer_amount
 
             local_start = fields.Datetime.context_timestamp(self, session.start_at) if session.start_at else False
 
@@ -257,7 +268,7 @@ class PosDailyReportWizard(models.TransientModel):
             'sequence': sequence,
             'is_group': False,
             'is_subtotal': True,
-            'subtotal_label': 'TOTAL VENTAS POS DIA',
+            'subtotal_label': 'TOTAL EFECTIVO Y EQUIVALENTES POS DIA',
             'order_count': data['totals']['order_count'],
             'cash_amount': data['totals']['cash_amount'],
             'driver_liquidation_amount': data['totals']['driver_liquidation_amount'],

@@ -1,0 +1,257 @@
+
+<odoo>
+    <record id="paperformat_lms_pos_cash_closing_act_letter" model="report.paperformat">
+        <field name="name">Acta Cierre Caja POS - Letter</field>
+        <field name="default" eval="False"/>
+        <field name="format">Letter</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">8</field>
+        <field name="margin_bottom">7</field>
+        <field name="margin_left">7</field>
+        <field name="margin_right">7</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <record id="action_report_lms_pos_cash_closing_act" model="ir.actions.report">
+        <field name="name">Acta de Cierre Caja POS</field>
+        <field name="model">lms.pos.cash.closing.act.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">lms_financial_reports.report_lms_pos_cash_closing_act</field>
+        <field name="report_file">lms_financial_reports.report_lms_pos_cash_closing_act</field>
+        <field name="paperformat_id" ref="lms_financial_reports.paperformat_lms_pos_cash_closing_act_letter"/>
+        <field name="print_report_name">'Acta Cierre Caja POS - %s' % (object.session_id.name)</field>
+    </record>
+
+    <template id="report_lms_pos_cash_closing_act">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-set="data" t-value="doc._get_report_values()"/>
+
+                <style>
+                    .lms_act_page {font-family: Arial, sans-serif; font-size: 9.5px; color:#222; line-height:1.13;}
+                    .lms_header_box {border:1px solid #875A7B; padding:6px 10px; text-align:center; margin-bottom:5px;}
+                    .lms_company {font-size:15px; font-weight:bold; margin:0;}
+                    .lms_doc_title {font-size:13px; font-weight:bold; margin:2px 0 0 0;}
+                    .lms_doc_subtitle {font-size:8.5px; color:#555; margin-top:2px;}
+                    .lms_table {width:100%; border-collapse:collapse;}
+                    .lms_table td, .lms_table th {border:1px solid #bbb; padding:3px 5px; vertical-align:middle;}
+                    .lms_label {background:#f3f3f3; font-weight:bold;}
+                    .lms_amount {text-align:right; white-space:nowrap;}
+                    .lms_section_title {background:#875A7B; color:#fff; padding:4px 7px; font-size:9.5px; font-weight:bold; margin-top:5px;}
+                    .lms_block_table {width:100%; border-collapse:collapse;}
+                    .lms_block_table td {vertical-align:top;}
+                    .lms_inner_table {width:100%; border-collapse:collapse;}
+                    .lms_inner_table td, .lms_inner_table th {border:1px solid #bbb; padding:3px 5px;}
+                    .lms_inner_table th {background:#f3f3f3; font-weight:bold;}
+                    .lms_total {background:#f8f4f8; font-weight:bold;}
+                    .lms_obs {border:1px solid #bbb; height:42px; padding:5px; margin-bottom:5px;}
+                    .lms_obs_line {border-bottom:1px solid #ddd; height:13px;}
+                    .lms_signature_area {margin-top:25px;}
+                    .lms_signature_table {width:100%; border-collapse:collapse; font-size:9.5px;}
+                    .lms_signature_table td {width:50%; text-align:center; vertical-align:top;}
+                    .lms_signature_line {border-top:1px solid #222; margin:0 35px; padding-top:5px; font-weight:bold;}
+                    .lms_signature_role {font-size:8.5px; margin-bottom:35px; font-weight:bold;}
+                    .lms_signature_name {font-size:8.5px; margin-top:4px;}
+                    .lms_small_note {font-size:8px; color:#666; text-align:center; margin-top:7px;}
+                </style>
+
+                <div class="page lms_act_page">
+                    <div class="lms_header_box">
+                        <div class="lms_company"><t t-esc="data['company'].name"/></div>
+                        <div class="lms_doc_title">ACTA DE CIERRE Y CUADRE DE CAJA POS</div>
+                        <div class="lms_doc_subtitle">Documento interno complementario para confirmar Cierre POS + Cobros CxC de la sesion</div>
+                    </div>
+
+                    <div class="lms_section_title">DATOS GENERALES</div>
+                    <table class="lms_table">
+                        <tr>
+                            <td class="lms_label" style="width:16%;">Fecha</td>
+                            <td style="width:18%;"><t t-esc="data['date_fmt']"/></td>
+                            <td class="lms_label" style="width:16%;">Sesion POS</td>
+                            <td style="width:20%;"><t t-esc="data['session'].name"/></td>
+                            <td class="lms_label" style="width:15%;">Ordenes</td>
+                            <td class="lms_amount" style="width:15%;"><t t-esc="data['order_count']"/></td>
+                        </tr>
+                        <tr>
+                            <td class="lms_label">Punto de Venta</td>
+                            <td colspan="2"><t t-esc="data['pos_config'].name"/></td>
+                            <td class="lms_label">Cajero(a)</td>
+                            <td colspan="2"><t t-esc="data['cashier'].name"/></td>
+                        </tr>
+                        <tr>
+                            <td class="lms_label">Apertura</td>
+                            <td colspan="2"><t t-esc="data['start_fmt']"/></td>
+                            <td class="lms_label">Cierre</td>
+                            <td colspan="2"><t t-esc="data['stop_fmt']"/></td>
+                        </tr>
+                    </table>
+
+                    <table class="lms_block_table" style="margin-top:5px;">
+                        <tr>
+                            <td style="width:50%; padding-right:4px;">
+                                <div class="lms_section_title">A. CUADRE CAJA POS</div>
+                                <table class="lms_inner_table">
+                                    <tr>
+                                        <th>Metodo</th>
+                                        <th class="lms_amount">Sistema</th>
+                                        <th class="lms_amount">Contado / Validado</th>
+                                        <th class="lms_amount">Diferencia</th>
+                                    </tr>
+                                    <t t-foreach="data['pos_cuadre']['rows']" t-as="row">
+                                        <tr>
+                                            <td><t t-esc="row['label']"/></td>
+                                            <td class="lms_amount"><t t-esc="row['expected_fmt']"/></td>
+                                            <td class="lms_amount"><t t-esc="row['counted_fmt']"/></td>
+                                            <td class="lms_amount"><t t-esc="row['difference_fmt']"/></td>
+                                        </tr>
+                                    </t>
+                                    <tr class="lms_total">
+                                        <td>TOTAL POS</td>
+                                        <td class="lms_amount"><t t-esc="data['pos_cuadre']['expected_total_fmt']"/></td>
+                                        <td class="lms_amount"><t t-esc="data['pos_cuadre']['counted_total_fmt']"/></td>
+                                        <td class="lms_amount"><t t-esc="data['pos_cuadre']['difference_total_fmt']"/></td>
+                                    </tr>
+                                </table>
+                            </td>
+
+                            <td style="width:50%; padding-left:4px;">
+                                <div class="lms_section_title">B. CUADRE COBROS CxC</div>
+                                <table class="lms_inner_table">
+                                    <tr>
+                                        <th>Metodo</th>
+                                        <th class="lms_amount">Sistema</th>
+                                        <th class="lms_amount">Contado / Validado</th>
+                                        <th class="lms_amount">Diferencia</th>
+                                    </tr>
+                                    <t t-foreach="data['cxc_cuadre']['rows']" t-as="row">
+                                        <tr>
+                                            <td><t t-esc="row['label']"/></td>
+                                            <td class="lms_amount"><t t-esc="row['expected_fmt']"/></td>
+                                            <td class="lms_amount"><t t-esc="row['counted_fmt']"/></td>
+                                            <td class="lms_amount"><t t-esc="row['difference_fmt']"/></td>
+                                        </tr>
+                                    </t>
+                                    <tr class="lms_total">
+                                        <td>TOTAL CxC</td>
+                                        <td class="lms_amount"><t t-esc="data['cxc_cuadre']['expected_total_fmt']"/></td>
+                                        <td class="lms_amount"><t t-esc="data['cxc_cuadre']['counted_total_fmt']"/></td>
+                                        <td class="lms_amount"><t t-esc="data['cxc_cuadre']['difference_total_fmt']"/></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div class="lms_section_title">C. TOTAL CONSOLIDADO POR METODO DE COBRO</div>
+                    <table class="lms_table" style="font-size:9px;">
+                        <thead>
+                            <tr>
+                                <th style="width:22%;">Metodo</th>
+                                <th class="lms_amount" style="width:15%;">CIERRE POS</th>
+                                <th class="lms_amount" style="width:15%;">CxC RECIBOS</th>
+                                <th class="lms_amount" style="width:16%;">SISTEMA</th>
+                                <th class="lms_amount" style="width:16%;">CONTADO / VALIDADO</th>
+                                <th class="lms_amount" style="width:16%;">DIFERENCIA</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="data['totals_by_method']['rows']" t-as="row">
+                                <tr>
+                                    <td><t t-esc="row['label']"/></td>
+                                    <td class="lms_amount"><t t-esc="row['pos_fmt']"/></td>
+                                    <td class="lms_amount"><t t-esc="row['cxc_fmt']"/></td>
+                                    <td class="lms_amount"><t t-esc="row['system_fmt']"/></td>
+                                    <td class="lms_amount"><t t-esc="row['counted_fmt']"/></td>
+                                    <td class="lms_amount"><t t-esc="row['difference_fmt']"/></td>
+                                </tr>
+                            </t>
+                            <tr class="lms_total">
+                                <td>TOTALES</td>
+                                <td class="lms_amount"><t t-esc="data['totals_by_method']['pos_total_fmt']"/></td>
+                                <td class="lms_amount"><t t-esc="data['totals_by_method']['cxc_total_fmt']"/></td>
+                                <td class="lms_amount"><t t-esc="data['totals_by_method']['system_total_fmt']"/></td>
+                                <td class="lms_amount"><t t-esc="data['totals_by_method']['counted_total_fmt']"/></td>
+                                <td class="lms_amount"><t t-esc="data['totals_by_method']['difference_total_fmt']"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="lms_section_title">D. RESULTADO GENERAL DEL CUADRE</div>
+                    <table class="lms_table">
+                        <tr>
+                            <td class="lms_label" style="width:40%;">Resultado</td>
+                            <td style="width:20%; font-weight:bold;"><t t-esc="data['result_label']"/></td>
+                            <td class="lms_label" style="width:20%;">Diferencia total</td>
+                            <td class="lms_amount" style="width:20%; font-weight:bold;"><t t-esc="data['totals_by_method']['difference_total_fmt']"/></td>
+                        </tr>
+                    </table>
+
+                    <div class="lms_section_title">E. DETALLE DE RECIBOS CxC DE LA SESION</div>
+                    <table class="lms_table" style="font-size:8.5px;">
+                        <thead>
+                            <tr>
+                                <th>Recibo</th>
+                                <th>Hora</th>
+                                <th>Cliente</th>
+                                <th>Metodo</th>
+                                <th>Referencia</th>
+                                <th class="lms_amount">Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-if="data['cxc_amounts']['lines']">
+                                <t t-foreach="data['cxc_amounts']['lines']" t-as="cxc_line">
+                                    <tr>
+                                        <td><t t-esc="cxc_line['name']"/></td>
+                                        <td><t t-esc="cxc_line['date']"/></td>
+                                        <td><t t-esc="cxc_line['partner']"/></td>
+                                        <td><t t-esc="cxc_line['method']"/></td>
+                                        <td><t t-esc="cxc_line['reference']"/></td>
+                                        <td class="lms_amount"><t t-esc="cxc_line['amount_fmt']"/></td>
+                                    </tr>
+                                </t>
+                            </t>
+                            <t t-else="">
+                                <tr>
+                                    <td colspan="6" style="text-align:center; color:#777;">No hay cobros CxC registrados en esta sesion.</td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+
+                    <div class="lms_section_title">OBSERVACIONES / INCIDENCIAS</div>
+                    <div class="lms_obs">
+                        <div class="lms_obs_line"></div>
+                        <div class="lms_obs_line"></div>
+                        <div class="lms_obs_line"></div>
+                    </div>
+
+                    <div class="lms_signature_area">
+                        <table class="lms_signature_table">
+                            <tr>
+                                <td>
+                                    <div class="lms_signature_role">Entregado por:</div>
+                                    <div class="lms_signature_line">Firma Cajero(a)</div>
+                                    <div class="lms_signature_name">Nombre: <t t-esc="data['cashier'].name"/></div>
+                                </td>
+                                <td>
+                                    <div class="lms_signature_role">Recibido y validado por:</div>
+                                    <div class="lms_signature_line">Firma Supervisor / Responsable</div>
+                                    <div class="lms_signature_name">Nombre: ______________________________</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="lms_small_note">
+                        Diferencia = Contado / Validado - Sistema. Este documento complementa el cierre nativo de Odoo POS y consolida los cobros CxC recibidos en la misma sesion.
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

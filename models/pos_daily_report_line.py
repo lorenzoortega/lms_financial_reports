@@ -45,7 +45,7 @@ class PosDailyReportLine(models.TransientModel):
 
     card_amount = fields.Float(string="Tarjeta")
     transfer_amount = fields.Float(string="Transferencia")
-    total_sales = fields.Float(string="TOTAL VENTAS")
+    total_sales = fields.Float(string="Total Efectivo y Equivalentes")
 
     pos_name = fields.Char(string="Punto de Venta")
     session_id = fields.Many2one('pos.session', string="Sesión POS")
@@ -61,7 +61,7 @@ class PosDailyReportLine(models.TransientModel):
     cash_difference_display = fields.Char(string="Diferencia Efectivo", compute='_compute_display_fields', store=False)
     card_amount_display = fields.Char(string="Tarjeta", compute='_compute_display_fields', store=False)
     transfer_amount_display = fields.Char(string="Transferencia", compute='_compute_display_fields', store=False)
-    total_sales_display = fields.Char(string="TOTAL VENTAS", compute='_compute_display_fields', store=False)
+    total_sales_display = fields.Char(string="Total Efectivo y Equivalentes", compute='_compute_display_fields', store=False)
 
     @api.depends('is_group', 'is_subtotal')
     def _compute_row_type(self):

@@ -36,7 +36,7 @@
                 <field name="cash_difference_display" string="Diferencia Efectivo"/>
                 <field name="card_amount_display" string="Tarjeta"/>
                 <field name="transfer_amount_display" string="Transferencia"/>
-                <field name="total_sales_display" string="TOTAL VENTAS"/>
+                <field name="total_sales_display" string="Total Efectivo y Equivalentes"/>
 
             </list>
         </field>
