@@ -21,22 +21,35 @@
                 <field name="is_subtotal" column_invisible="1"/>
                 <field name="row_type" column_invisible="1"/>
                 <field name="has_cash_counted" column_invisible="1"/>
+                <field name="other_amount" column_invisible="1"/>
+                <field name="cxc_other_amount" column_invisible="1"/>
+                <field name="total_other_collected" column_invisible="1"/>
 
                 <field name="date_label" string="Fecha / POS"/>
                 <field name="session_state" string="Estado"/>
                 <field name="cashier_name" string="Cajero"/>
-                <field name="order_count_display" string="Cant. Órdenes"/>
+                <field name="order_count_display" string="Cant. Órdenes POS"/>
+                <field name="cxc_receipt_count_display" string="Recibos CxC"/>
                 <field name="session_name" string="Sesión"/>
                 <field name="session_range" string="Rango Sesión"/>
 
-                <field name="cash_amount_display" string="Efectivo"/>
-                <field name="driver_liquidation_amount_display" string="Liquidación Chofer"/>
-                <field name="total_cash_collected_display" string="Total Efectivo Cobrado"/>
+                <field name="cash_amount_display" string="Efectivo POS"/>
+                <field name="cxc_cash_amount_display" string="Efectivo CxC"/>
+                <field name="total_cash_collected_display" string="Total Efectivo"/>
+                <field name="driver_liquidation_amount_display" string="Liq. Chofer"/>
                 <field name="cash_counted_display" string="Efectivo Contado"/>
-                <field name="cash_difference_display" string="Diferencia Efectivo"/>
-                <field name="card_amount_display" string="Tarjeta"/>
-                <field name="transfer_amount_display" string="Transferencia"/>
-                <field name="total_sales_display" string="Total Efectivo y Equivalentes"/>
+                <field name="cash_difference_display" string="Dif. Efectivo"/>
+
+                <field name="card_amount_display" string="Tarjeta POS"/>
+                <field name="cxc_card_amount_display" string="Tarjeta CxC"/>
+                <field name="total_card_collected_display" string="Total Tarjeta"/>
+
+                <field name="transfer_amount_display" string="Transferencia POS"/>
+                <field name="cxc_transfer_amount_display" string="Transferencia CxC"/>
+                <field name="total_transfer_collected_display" string="Total Transferencia"/>
+
+                <field name="cxc_total_amount_display" string="Total CxC"/>
+                <field name="total_sales_display" string="Total Recibido"/>
 
             </list>
         </field>

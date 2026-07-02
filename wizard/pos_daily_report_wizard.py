@@ -49,34 +49,48 @@ class PosDailyReportWizard(models.TransientModel):
             return f"{start_txt} - {stop_txt}"
         return start_txt or stop_txt or ''
 
+    def _classify_payment_method(self, method):
+        method_name = (method.name or '').strip().lower()
+
+        if getattr(method, 'is_cod_delivery', False):
+            return 'cod'
+        if getattr(method, 'is_cash_count', False):
+            return 'cash'
+        if 'efectivo' in method_name or 'cash' in method_name:
+            return 'cash'
+        if 'tarjeta' in method_name or 'card' in method_name:
+            return 'card'
+        if 'transfer' in method_name or 'transf' in method_name or 'transferencia' in method_name:
+            return 'transfer'
+        return 'other'
+
     def _classify_payments(self, orders):
         cash_amount = 0.0
         card_amount = 0.0
         transfer_amount = 0.0
+        other_amount = 0.0
 
         payments = orders.mapped('payment_ids')
 
         for payment in payments:
-            method = payment.payment_method_id
-            method_name = (method.name or '').strip().lower()
+            method_type = self._classify_payment_method(payment.payment_method_id)
             amount = payment.amount or 0.0
 
             # Los pagos COD / Contra Entrega no se cuentan aquí.
             # Se reportan como Liquidación Chofer cuando el chofer entrega
             # el dinero en una sesión POS.
-            if getattr(method, 'is_cod_delivery', False):
+            if method_type == 'cod':
                 continue
-
-            if 'efectivo' in method_name or 'cash' in method_name:
+            if method_type == 'cash':
                 cash_amount += amount
-            elif 'tarjeta' in method_name or 'card' in method_name:
+            elif method_type == 'card':
                 card_amount += amount
-            elif 'transfer' in method_name or 'transferencia' in method_name:
+            elif method_type == 'transfer':
                 transfer_amount += amount
             else:
-                transfer_amount += amount
+                other_amount += amount
 
-        return cash_amount, card_amount, transfer_amount
+        return cash_amount, card_amount, transfer_amount, other_amount
 
     def _get_driver_liquidation_amounts_by_session(self, sessions):
         result = {session.id: 0.0 for session in sessions}
@@ -103,6 +117,62 @@ class PosDailyReportWizard(models.TransientModel):
 
         return result
 
+    def _get_cxc_receipt_amounts_by_session(self, sessions):
+        result = {
+            session.id: {
+                'cxc_receipt_count': 0,
+                'cxc_cash_amount': 0.0,
+                'cxc_card_amount': 0.0,
+                'cxc_transfer_amount': 0.0,
+                'cxc_other_amount': 0.0,
+                'cxc_total_amount': 0.0,
+            }
+            for session in sessions
+        }
+
+        if not sessions:
+            return result
+
+        if 'lms.pos.cxc.receipt' not in self.env.registry.models:
+            return result
+
+        Receipt = self.env['lms.pos.cxc.receipt']
+        receipts = Receipt.search([
+            ('pos_session_id', 'in', sessions.ids),
+            ('state', '=', 'posted'),
+        ])
+
+        for receipt in receipts:
+            session = receipt.pos_session_id
+            if not session:
+                continue
+
+            vals = result.setdefault(session.id, {
+                'cxc_receipt_count': 0,
+                'cxc_cash_amount': 0.0,
+                'cxc_card_amount': 0.0,
+                'cxc_transfer_amount': 0.0,
+                'cxc_other_amount': 0.0,
+                'cxc_total_amount': 0.0,
+            })
+
+            amount = receipt.amount or 0.0
+            method_type = self._classify_payment_method(receipt.payment_method_id)
+
+            if method_type == 'cash':
+                vals['cxc_cash_amount'] += amount
+            elif method_type == 'card':
+                vals['cxc_card_amount'] += amount
+            elif method_type == 'transfer':
+                vals['cxc_transfer_amount'] += amount
+            else:
+                vals['cxc_other_amount'] += amount
+
+            vals['cxc_total_amount'] += amount
+            vals['cxc_receipt_count'] += 1
+
+        return result
+
     def _get_session_cash_counted(self, session):
         """
         Efectivo contado físicamente al cierre.
@@ -118,6 +188,33 @@ class PosDailyReportWizard(models.TransientModel):
             return session.cash_register_balance_end_real or 0.0, True
 
         return 0.0, False
+
+    def _empty_totals(self):
+        return {
+            'order_count': 0,
+            'cxc_receipt_count': 0,
+            'cash_amount': 0.0,
+            'driver_liquidation_amount': 0.0,
+            'cxc_cash_amount': 0.0,
+            'total_cash_collected': 0.0,
+            'cash_counted': 0.0,
+            'cash_difference': 0.0,
+            'card_amount': 0.0,
+            'cxc_card_amount': 0.0,
+            'total_card_collected': 0.0,
+            'transfer_amount': 0.0,
+            'cxc_transfer_amount': 0.0,
+            'total_transfer_collected': 0.0,
+            'other_amount': 0.0,
+            'cxc_other_amount': 0.0,
+            'total_other_collected': 0.0,
+            'cxc_total_amount': 0.0,
+            'total_sales': 0.0,
+        }
+
+    def _accumulate_totals(self, target, source):
+        for key in target.keys():
+            target[key] += source.get(key, 0.0) or 0.0
 
     def _get_report_data(self):
         self.ensure_one()
@@ -135,26 +232,18 @@ class PosDailyReportWizard(models.TransientModel):
 
         sessions = Session.search(domain, order='config_id asc, start_at asc, name asc')
         driver_liquidation_by_session = self._get_driver_liquidation_amounts_by_session(sessions)
+        cxc_by_session = self._get_cxc_receipt_amounts_by_session(sessions)
 
         pos_groups = OrderedDict()
-
-        totals = {
-            'order_count': 0,
-            'cash_amount': 0.0,
-            'driver_liquidation_amount': 0.0,
-            'total_cash_collected': 0.0,
-            'cash_counted': 0.0,
-            'cash_difference': 0.0,
-            'card_amount': 0.0,
-            'transfer_amount': 0.0,
-            'total_sales': 0.0,
-        }
+        totals = self._empty_totals()
 
         for session in sessions:
             session_orders = session.order_ids.filtered(lambda o: o.state in ['paid', 'done', 'invoiced'])
             driver_liquidation_amount = driver_liquidation_by_session.get(session.id, 0.0)
+            cxc_vals = cxc_by_session.get(session.id, {})
+            cxc_total_amount = cxc_vals.get('cxc_total_amount', 0.0)
 
-            if not session_orders and not driver_liquidation_amount:
+            if not session_orders and not driver_liquidation_amount and not cxc_total_amount:
                 continue
 
             pos = session.config_id
@@ -166,29 +255,37 @@ class PosDailyReportWizard(models.TransientModel):
                     'pos': pos,
                     'pos_name': pos_name,
                     'sessions': [],
+                    'subtotal': self._empty_totals(),
                 }
 
             order_count = len(session_orders)
-            cash_amount, card_amount, transfer_amount = self._classify_payments(session_orders)
+            cash_amount, card_amount, transfer_amount, other_amount = self._classify_payments(session_orders)
 
-            # IMPORTANTE:
-            # La liquidación de chofer ya entra como pago real de efectivo
-            # dentro de los pagos POS de la sesión cuando se registra con
-            # el método Efectivo POSxx. Por eso NO debe sumarse otra vez
-            # al efectivo cobrado, porque duplicaría el monto en el cuadre.
-            #
-            # La columna driver_liquidation_amount queda solo como desglose
-            # informativo: indica cuánto del efectivo POS corresponde a
-            # liquidaciones de chofer.
-            total_cash_collected = cash_amount
+            cxc_cash_amount = cxc_vals.get('cxc_cash_amount', 0.0)
+            cxc_card_amount = cxc_vals.get('cxc_card_amount', 0.0)
+            cxc_transfer_amount = cxc_vals.get('cxc_transfer_amount', 0.0)
+            cxc_other_amount = cxc_vals.get('cxc_other_amount', 0.0)
+            cxc_receipt_count = cxc_vals.get('cxc_receipt_count', 0)
+
+            # La liquidación de chofer ya entra como pago real de efectivo dentro de
+            # los pagos POS cuando se registra con el método Efectivo POSxx. Por eso
+            # no se suma nuevamente; queda solo como desglose informativo.
+            total_cash_collected = cash_amount + cxc_cash_amount
+            total_card_collected = card_amount + cxc_card_amount
+            total_transfer_collected = transfer_amount + cxc_transfer_amount
+            total_other_collected = other_amount + cxc_other_amount
+
             cash_counted, has_cash_counted = self._get_session_cash_counted(session)
             cash_difference = cash_counted - total_cash_collected if has_cash_counted else 0.0
 
-            # Total Efectivo y Equivalentes representa el dinero recibido
-            # por medios de cobro: efectivo + tarjeta + transferencia.
-            # No se afecta por sobrantes/faltantes, y tampoco suma
-            # liquidación chofer nuevamente porque ya está dentro de efectivo.
-            total_sales = cash_amount + card_amount + transfer_amount
+            # Total Efectivo y Equivalentes representa lo recibido por caja:
+            # ventas POS + Recibos CxC Clientes, separado por método de cobro.
+            total_sales = (
+                total_cash_collected
+                + total_card_collected
+                + total_transfer_collected
+                + total_other_collected
+            )
 
             local_start = fields.Datetime.context_timestamp(self, session.start_at) if session.start_at else False
 
@@ -199,14 +296,24 @@ class PosDailyReportWizard(models.TransientModel):
                 'session_state': session.state or '',
                 'cashier_name': session.user_id.display_name or '',
                 'order_count': order_count,
+                'cxc_receipt_count': cxc_receipt_count,
                 'cash_amount': cash_amount,
                 'driver_liquidation_amount': driver_liquidation_amount,
+                'cxc_cash_amount': cxc_cash_amount,
                 'total_cash_collected': total_cash_collected,
                 'cash_counted': cash_counted,
                 'cash_difference': cash_difference,
                 'has_cash_counted': has_cash_counted,
                 'card_amount': card_amount,
+                'cxc_card_amount': cxc_card_amount,
+                'total_card_collected': total_card_collected,
                 'transfer_amount': transfer_amount,
+                'cxc_transfer_amount': cxc_transfer_amount,
+                'total_transfer_collected': total_transfer_collected,
+                'other_amount': other_amount,
+                'cxc_other_amount': cxc_other_amount,
+                'total_other_collected': total_other_collected,
+                'cxc_total_amount': cxc_total_amount,
                 'total_sales': total_sales,
                 'session_id': session.id,
                 'pos_config_id': pos.id if pos else False,
@@ -215,18 +322,8 @@ class PosDailyReportWizard(models.TransientModel):
             }
 
             pos_groups[pos_key]['sessions'].append(session_vals)
-
-            totals['order_count'] += order_count
-            totals['cash_amount'] += cash_amount
-            totals['driver_liquidation_amount'] += driver_liquidation_amount
-            totals['total_cash_collected'] += total_cash_collected
-            totals['card_amount'] += card_amount
-            totals['transfer_amount'] += transfer_amount
-            totals['total_sales'] += total_sales
-
-            if has_cash_counted:
-                totals['cash_counted'] += cash_counted
-                totals['cash_difference'] += cash_difference
+            self._accumulate_totals(pos_groups[pos_key]['subtotal'], session_vals)
+            self._accumulate_totals(totals, session_vals)
 
         return {
             'pos_groups': list(pos_groups.values()),
@@ -263,22 +360,26 @@ class PosDailyReportWizard(models.TransientModel):
                 Line.create(vals)
                 sequence += 1
 
+            subtotal = group.get('subtotal') or self._empty_totals()
+            Line.create({
+                'wizard_id': self.id,
+                'sequence': sequence,
+                'is_group': False,
+                'is_subtotal': True,
+                'subtotal_label': 'SUBTOTAL %s' % group['pos_name'],
+                **subtotal,
+                'has_cash_counted': True,
+            })
+            sequence += 1
+
         Line.create({
             'wizard_id': self.id,
             'sequence': sequence,
             'is_group': False,
             'is_subtotal': True,
             'subtotal_label': 'TOTAL EFECTIVO Y EQUIVALENTES POS DIA',
-            'order_count': data['totals']['order_count'],
-            'cash_amount': data['totals']['cash_amount'],
-            'driver_liquidation_amount': data['totals']['driver_liquidation_amount'],
-            'total_cash_collected': data['totals']['total_cash_collected'],
-            'cash_counted': data['totals']['cash_counted'],
-            'cash_difference': data['totals']['cash_difference'],
+            **data['totals'],
             'has_cash_counted': True,
-            'card_amount': data['totals']['card_amount'],
-            'transfer_amount': data['totals']['transfer_amount'],
-            'total_sales': data['totals']['total_sales'],
         })
 
         return {

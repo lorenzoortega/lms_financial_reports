@@ -27,28 +27,32 @@
 
                     <br/>
 
-                    <table class="table table-sm table-bordered" style="font-size:11px;">
+                    <table class="table table-sm table-bordered" style="font-size:8px;">
                         <thead style="background-color:#f2f2f2;">
                             <tr>
                                 <th>Fecha</th>
-                                <th>Rango Sesión</th>
                                 <th>Sesión</th>
-                                <th>Estado</th>
                                 <th>Cajero</th>
-                                <th style="text-align:right;">Cant. Órdenes</th>
-                                <th style="text-align:right;">Efectivo</th>
+                                <th style="text-align:right;">Órdenes</th>
+                                <th style="text-align:right;">Rec. CxC</th>
+                                <th style="text-align:right;">Efectivo POS</th>
+                                <th style="text-align:right;">Efectivo CxC</th>
+                                <th style="text-align:right;">Total Efectivo</th>
                                 <th style="text-align:right;">Contado</th>
-                                <th style="text-align:right;">Diferencia</th>
-                                <th style="text-align:right;">Tarjeta</th>
-                                <th style="text-align:right;">Transferencia</th>
-                                <th style="text-align:right;">ITBIS</th>
-                                <th style="text-align:right;">Total</th>
+                                <th style="text-align:right;">Dif.</th>
+                                <th style="text-align:right;">Tarjeta POS</th>
+                                <th style="text-align:right;">Tarjeta CxC</th>
+                                <th style="text-align:right;">Total Tarjeta</th>
+                                <th style="text-align:right;">Transf. POS</th>
+                                <th style="text-align:right;">Transf. CxC</th>
+                                <th style="text-align:right;">Total Transf.</th>
+                                <th style="text-align:right;">Total Recibido</th>
                             </tr>
                         </thead>
                         <tbody>
                             <t t-foreach="data['pos_groups']" t-as="group">
                                 <tr style="font-weight:bold; background-color:#eaeaea;">
-                                    <td colspan="13">
+                                    <td colspan="17">
                                         <span t-esc="group['pos_name']"/>
                                     </td>
                                 </tr>
@@ -56,42 +60,62 @@
                                 <t t-foreach="group['sessions']" t-as="line">
                                     <tr>
                                         <td><span t-esc="line['date']"/></td>
-                                        <td><span t-esc="line['session_range']"/></td>
                                         <td><span t-esc="line['session_name']"/></td>
-                                        <td><span t-esc="line['session_state']"/></td>
                                         <td><span t-esc="line['cashier_name']"/></td>
                                         <td style="text-align:right;"><span t-esc="line['order_count']"/></td>
+                                        <td style="text-align:right;"><span t-esc="line['cxc_receipt_count']"/></td>
                                         <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['cash_amount'])"/></td>
-                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['cash_real'])"/></td>
-                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['cash_diff'])"/></td>
+                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['cxc_cash_amount'])"/></td>
+                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['total_cash_collected'])"/></td>
+                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['cash_counted'])"/></td>
+                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['cash_difference'])"/></td>
                                         <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['card_amount'])"/></td>
+                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['cxc_card_amount'])"/></td>
+                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['total_card_collected'])"/></td>
                                         <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['transfer_amount'])"/></td>
-                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['tax_amount'])"/></td>
-                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['total_amount'])"/></td>
+                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['cxc_transfer_amount'])"/></td>
+                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['total_transfer_collected'])"/></td>
+                                        <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(line['total_sales'])"/></td>
                                     </tr>
                                 </t>
 
+                                <t t-set="subtotal" t-value="group['subtotal']"/>
                                 <tr style="font-weight:bold; background-color:#f5f5f5;">
-                                    <td colspan="6">SUBTOTAL <span t-esc="group['pos_name']"/></td>
-                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(group['subtotal']['cash_amount'])"/></td>
-                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(group['subtotal']['cash_real'])"/></td>
-                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(group['subtotal']['cash_diff'])"/></td>
-                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(group['subtotal']['card_amount'])"/></td>
-                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(group['subtotal']['transfer_amount'])"/></td>
-                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(group['subtotal']['tax_amount'])"/></td>
-                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(group['subtotal']['total_amount'])"/></td>
+                                    <td colspan="3">SUBTOTAL <span t-esc="group['pos_name']"/></td>
+                                    <td style="text-align:right;"><span t-esc="subtotal['order_count']"/></td>
+                                    <td style="text-align:right;"><span t-esc="subtotal['cxc_receipt_count']"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(subtotal['cash_amount'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(subtotal['cxc_cash_amount'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(subtotal['total_cash_collected'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(subtotal['cash_counted'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(subtotal['cash_difference'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(subtotal['card_amount'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(subtotal['cxc_card_amount'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(subtotal['total_card_collected'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(subtotal['transfer_amount'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(subtotal['cxc_transfer_amount'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(subtotal['total_transfer_collected'])"/></td>
+                                    <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(subtotal['total_sales'])"/></td>
                                 </tr>
                             </t>
 
+                            <t t-set="totals" t-value="data['totals']"/>
                             <tr style="font-weight:bold; background-color:#d9d9d9;">
-                                <td colspan="6">TOTAL VENTAS POS DÍA</td>
-                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['cash_amount'])"/></td>
-                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['cash_real'])"/></td>
-                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['cash_diff'])"/></td>
-                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['card_amount'])"/></td>
-                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['transfer_amount'])"/></td>
-                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['tax_amount'])"/></td>
-                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(data['totals']['total_amount'])"/></td>
+                                <td colspan="3">TOTAL RECIBIDO POS DÍA</td>
+                                <td style="text-align:right;"><span t-esc="totals['order_count']"/></td>
+                                <td style="text-align:right;"><span t-esc="totals['cxc_receipt_count']"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(totals['cash_amount'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(totals['cxc_cash_amount'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(totals['total_cash_collected'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(totals['cash_counted'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(totals['cash_difference'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(totals['card_amount'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(totals['cxc_card_amount'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(totals['total_card_collected'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(totals['transfer_amount'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(totals['cxc_transfer_amount'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(totals['total_transfer_collected'])"/></td>
+                                <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(totals['total_sales'])"/></td>
                             </tr>
                         </tbody>
                     </table>
