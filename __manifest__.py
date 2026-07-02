@@ -52,7 +52,6 @@
         'views/pos_cash_closing_act_line_views.xml',
         'views/pos_cash_closing_act_wizard_view.xml',
         'report/pos_cash_closing_act_pdf.xml',
-        'views/pos_cash_closing_act_wizard_view.xml',
         'report/pos_cash_closing_act_report.xml',
 
 
