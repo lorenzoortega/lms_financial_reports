@@ -74,6 +74,15 @@ class LmsPosCashClosingActWizard(models.TransientModel):
     def _is_cash_payment_method(self, method):
         return bool(getattr(method, "is_cash_count", False))
 
+    def _is_cod_delivery_payment_method(self, method):
+        """Metodo usado para ventas contra entrega de pedidos telefonicos.
+
+        Aunque normalmente esta marcado como conteo de efectivo en POS,
+        operativamente no representa dinero fisico recibido en caja hasta que
+        el chofer liquide. Por eso el acta lo separa del efectivo contado.
+        """
+        return bool(getattr(method, "is_cod_delivery", False))
+
     def _classify_payment_method(self, method):
         name = (method.name or "").lower()
         if self._is_cash_payment_method(method):
@@ -94,18 +103,147 @@ class LmsPosCashClosingActWizard(models.TransientModel):
             "card_total": 0.0,
             "transfer_total": 0.0,
             "other_total": 0.0,
+            # Total real que debe validarse en caja/medios del cierre.
             "total": 0.0,
+            # Total bruto POS incluyendo contra entrega, solo informativo.
+            "gross_total": 0.0,
+            # Contra entrega pendiente de chofer: no es efectivo fisico de caja.
+            "cod_delivery_total": 0.0,
         }
 
         for payment in payments:
-            method_type = self._classify_payment_method(payment.payment_method_id)
             amount = self._amount(payment.amount)
+            method = payment.payment_method_id
+            result["gross_total"] += amount
+
+            if self._is_cod_delivery_payment_method(method):
+                result["cod_delivery_total"] += amount
+                continue
+
+            method_type = self._classify_payment_method(method)
             key = "%s_total" % method_type
             if key not in result:
                 key = "other_total"
             result[key] += amount
             result["total"] += amount
 
+        return result
+
+    def _get_phone_order_by_pos_order(self, pos_order):
+        if not pos_order or "lms.phone.order" not in self.env:
+            return False
+
+        phone_model = self.env["lms.phone.order"]
+        phone = phone_model.search([("pos_order_id", "=", pos_order.id)], limit=1)
+        if not phone and "pos_order_ids" in phone_model._fields:
+            phone = phone_model.search([("pos_order_ids", "in", pos_order.ids)], limit=1)
+        return phone
+
+    def _selection_label(self, record, field_name, value):
+        if not record or field_name not in record._fields or not value:
+            return value or ""
+        selection = record._fields[field_name].selection
+        if callable(selection):
+            selection = selection(record)
+        return dict(selection or []).get(value, value)
+
+    def _get_cod_delivery_lines(self, session):
+        """Detalle informativo de pagos contra entrega de la sesion.
+
+        Estos pagos quedan registrados en POS para completar la factura, pero no
+        deben formar parte del efectivo fisico contado en caja mientras el
+        chofer no los liquide.
+        """
+        result = {
+            "lines": [],
+            "cod_total": 0.0,
+            "cod_total_fmt": self._fmt_money(0.0),
+            "non_cod_total": 0.0,
+            "non_cod_total_fmt": self._fmt_money(0.0),
+            "order_total": 0.0,
+            "order_total_fmt": self._fmt_money(0.0),
+        }
+
+        payments = self.env["pos.payment"].search([
+            ("session_id", "=", session.id),
+        ], order="id asc")
+
+        processed_order_ids = set()
+
+        for payment in payments:
+            if not self._is_cod_delivery_payment_method(payment.payment_method_id):
+                continue
+
+            order = payment.pos_order_id
+            if order and order.id in processed_order_ids:
+                continue
+            if order:
+                processed_order_ids.add(order.id)
+                order_payments = order.payment_ids
+            else:
+                order_payments = payment
+
+            cod_amount = sum(
+                self._amount(pay.amount)
+                for pay in order_payments
+                if self._is_cod_delivery_payment_method(pay.payment_method_id)
+            )
+            non_cod_amount = sum(
+                self._amount(pay.amount)
+                for pay in order_payments
+                if not self._is_cod_delivery_payment_method(pay.payment_method_id)
+            )
+
+            non_cod_methods = []
+            for pay in order_payments:
+                if self._is_cod_delivery_payment_method(pay.payment_method_id):
+                    continue
+                non_cod_methods.append("%s %s" % (pay.payment_method_id.name or "", self._fmt_money(pay.amount)))
+
+            phone = self._get_phone_order_by_pos_order(order) if order else False
+            invoice = False
+            if phone and "invoice_id" in phone._fields:
+                invoice = phone.invoice_id
+            if not invoice and order:
+                invoice = getattr(order, "account_move", False)
+
+            driver = ""
+            if phone and "driver_id" in phone._fields and phone.driver_id:
+                driver = phone.driver_id.display_name
+
+            cash_state = ""
+            cash_state_label = ""
+            if phone and "delivery_cash_state" in phone._fields:
+                cash_state = phone.delivery_cash_state or ""
+                cash_state_label = self._selection_label(phone, "delivery_cash_state", cash_state)
+
+            order_total = self._amount(getattr(order, "amount_total", 0.0)) if order else (cod_amount + non_cod_amount)
+
+            line = {
+                "phone_name": phone.name if phone else "",
+                "pos_order_name": order.name if order else "",
+                "pos_reference": getattr(order, "pos_reference", "") if order else "",
+                "invoice_name": invoice.name if invoice else "",
+                "partner": (phone.partner_id.display_name if phone and phone.partner_id else (order.partner_id.display_name if order and order.partner_id else "")),
+                "driver": driver,
+                "cash_state": cash_state,
+                "cash_state_label": cash_state_label or "COD pendiente",
+                "non_cod_detail": ", ".join(non_cod_methods),
+                "non_cod_amount": non_cod_amount,
+                "non_cod_amount_fmt": self._fmt_money(non_cod_amount),
+                "cod_amount": cod_amount,
+                "cod_amount_fmt": self._fmt_money(cod_amount),
+                "order_total": order_total,
+                "order_total_fmt": self._fmt_money(order_total),
+            }
+            result["lines"].append(line)
+            result["cod_total"] += cod_amount
+            result["non_cod_total"] += non_cod_amount
+            result["order_total"] += order_total
+
+        result["cod_total_fmt"] = self._fmt_money(result["cod_total"])
+        result["non_cod_total_fmt"] = self._fmt_money(result["non_cod_total"])
+        result["order_total_fmt"] = self._fmt_money(result["order_total"])
         return result
 
     def _get_official_pos_counted(self, session, pos_amounts):
@@ -274,6 +412,7 @@ class LmsPosCashClosingActWizard(models.TransientModel):
         company = self.env.company
 
         pos_amounts = self._get_payment_amounts(session)
+        cod_delivery = self._get_cod_delivery_lines(session)
         cxc_amounts = self._get_cxc_receipt_amounts(session)
 
         # POS oficial no se captura ni se modifica en este wizard.
@@ -313,6 +452,7 @@ class LmsPosCashClosingActWizard(models.TransientModel):
             "stop_fmt": self._fmt_datetime(session.stop_at),
 
             "pos_amounts": pos_amounts,
+            "cod_delivery": cod_delivery,
             "cxc_amounts": cxc_amounts,
             "pos_cuadre": pos_cuadre,
             "cxc_cuadre": cxc_cuadre,
@@ -323,7 +463,9 @@ class LmsPosCashClosingActWizard(models.TransientModel):
             "card_total_fmt": self._fmt_money(pos_amounts["card_total"]),
             "transfer_total_fmt": self._fmt_money(pos_amounts["transfer_total"]),
             "other_total_fmt": self._fmt_money(pos_amounts["other_total"]),
+            "cod_delivery_total_fmt": self._fmt_money(pos_amounts["cod_delivery_total"]),
             "pos_total_fmt": self._fmt_money(pos_amounts["total"]),
+            "pos_gross_total_fmt": self._fmt_money(pos_amounts["gross_total"]),
             "cxc_cash_total_fmt": self._fmt_money(cxc_amounts["cash_total"]),
             "cxc_card_total_fmt": self._fmt_money(cxc_amounts["card_total"]),
             "cxc_transfer_total_fmt": self._fmt_money(cxc_amounts["transfer_total"]),

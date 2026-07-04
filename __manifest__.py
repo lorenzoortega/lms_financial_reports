@@ -1,6 +1,6 @@
 {
     'name': 'LMS Financial Reports',
-    'version': '1.5',
+    'version': '1.5.1',
     'summary': 'Reportes Financieros Profesionales LMS',
     'author': 'LMS',
     'depends': [

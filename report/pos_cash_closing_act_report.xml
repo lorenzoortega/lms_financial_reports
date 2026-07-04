@@ -57,6 +57,7 @@
                     .lms_signature_role {font-size:8.5px; margin-bottom:35px; font-weight:bold;}
                     .lms_signature_name {font-size:8.5px; margin-top:4px;}
                     .lms_small_note {font-size:8px; color:#666; text-align:center; margin-top:7px;}
+                    .lms_warning_note {font-size:8.2px; color:#7a5c00; padding:3px 5px;}
                 </style>
 
                 <div class="page lms_act_page">
@@ -110,7 +111,7 @@
                                         </tr>
                                     </t>
                                     <tr class="lms_total">
-                                        <td>TOTAL POS</td>
+                                        <td>TOTAL POS A VALIDAR</td>
                                         <td class="lms_amount"><t t-esc="data['pos_cuadre']['expected_total_fmt']"/></td>
                                         <td class="lms_amount"><t t-esc="data['pos_cuadre']['counted_total_fmt']"/></td>
                                         <td class="lms_amount"><t t-esc="data['pos_cuadre']['difference_total_fmt']"/></td>
@@ -146,7 +147,50 @@
                         </tr>
                     </table>
 
-                    <div class="lms_section_title">C. TOTAL CONSOLIDADO POR METODO DE COBRO</div>
+                    <t t-if="data['cod_delivery']['lines']">
+                        <div class="lms_section_title">C. CONTRA ENTREGA / COD PENDIENTE CHOFER</div>
+                        <table class="lms_table" style="font-size:8.4px;">
+                            <thead>
+                                <tr>
+                                    <th style="width:12%;">Pedido</th>
+                                    <th style="width:19%;">Cliente</th>
+                                    <th style="width:16%;">Chofer</th>
+                                    <th style="width:13%;">Factura</th>
+                                    <th style="width:14%;">Estado</th>
+                                    <th class="lms_amount" style="width:13%;">Cobrado / validado</th>
+                                    <th class="lms_amount" style="width:13%;">Pendiente COD</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="data['cod_delivery']['lines']" t-as="cod_line">
+                                    <tr>
+                                        <td>
+                                            <t t-if="cod_line['phone_name']"><t t-esc="cod_line['phone_name']"/></t>
+                                            <t t-else=""><t t-esc="cod_line['pos_order_name']"/></t>
+                                        </td>
+                                        <td><t t-esc="cod_line['partner']"/></td>
+                                        <td><t t-esc="cod_line['driver']"/></td>
+                                        <td><t t-esc="cod_line['invoice_name']"/></td>
+                                        <td><t t-esc="cod_line['cash_state_label']"/></td>
+                                        <td class="lms_amount"><t t-esc="cod_line['non_cod_amount_fmt']"/></td>
+                                        <td class="lms_amount"><t t-esc="cod_line['cod_amount_fmt']"/></td>
+                                    </tr>
+                                </t>
+                                <tr class="lms_total">
+                                    <td colspan="5">TOTAL CONTRA ENTREGA</td>
+                                    <td class="lms_amount"><t t-esc="data['cod_delivery']['non_cod_total_fmt']"/></td>
+                                    <td class="lms_amount"><t t-esc="data['cod_delivery']['cod_total_fmt']"/></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="7" class="lms_warning_note">
+                                        Nota: el pendiente COD queda reconocido para seguimiento del chofer, pero no forma parte del efectivo fisico contado en caja hasta su liquidacion.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </t>
+
+                    <div class="lms_section_title">D. TOTAL CONSOLIDADO POR METODO DE COBRO</div>
                     <table class="lms_table" style="font-size:9px;">
                         <thead>
                             <tr>
@@ -170,17 +214,27 @@
                                 </tr>
                             </t>
                             <tr class="lms_total">
-                                <td>TOTALES</td>
+                                <td>TOTALES A VALIDAR</td>
                                 <td class="lms_amount"><t t-esc="data['totals_by_method']['pos_total_fmt']"/></td>
                                 <td class="lms_amount"><t t-esc="data['totals_by_method']['cxc_total_fmt']"/></td>
                                 <td class="lms_amount"><t t-esc="data['totals_by_method']['system_total_fmt']"/></td>
                                 <td class="lms_amount"><t t-esc="data['totals_by_method']['counted_total_fmt']"/></td>
                                 <td class="lms_amount"><t t-esc="data['totals_by_method']['difference_total_fmt']"/></td>
                             </tr>
+                            <t t-if="data['cod_delivery']['cod_total']">
+                                <tr>
+                                    <td>Contra entrega pendiente chofer</td>
+                                    <td class="lms_amount"><t t-esc="data['cod_delivery']['cod_total_fmt']"/></td>
+                                    <td class="lms_amount">RD$ 0.00</td>
+                                    <td class="lms_amount">Informativo</td>
+                                    <td class="lms_amount">No contado</td>
+                                    <td class="lms_amount">No aplica</td>
+                                </tr>
+                            </t>
                         </tbody>
                     </table>
 
-                    <div class="lms_section_title">D. RESULTADO GENERAL DEL CUADRE</div>
+                    <div class="lms_section_title">E. RESULTADO GENERAL DEL CUADRE</div>
                     <table class="lms_table">
                         <tr>
                             <td class="lms_label" style="width:40%;">Resultado</td>
@@ -190,7 +244,7 @@
                         </tr>
                     </table>
 
-                    <div class="lms_section_title">E. DETALLE DE RECIBOS CxC DE LA SESION</div>
+                    <div class="lms_section_title">F. DETALLE DE RECIBOS CxC DE LA SESION</div>
                     <table class="lms_table" style="font-size:8.5px;">
                         <thead>
                             <tr>
@@ -248,7 +302,7 @@
                     </div>
 
                     <div class="lms_small_note">
-                        Diferencia = Contado / Validado - Sistema. Este documento complementa el cierre nativo de Odoo POS y consolida los cobros CxC recibidos en la misma sesion.
+                        Diferencia = Contado / Validado - Sistema. Los pagos contra entrega/COD pendientes de chofer se muestran aparte y no se incluyen como efectivo fisico de caja hasta su liquidacion.
                     </div>
                 </div>
             </t>
